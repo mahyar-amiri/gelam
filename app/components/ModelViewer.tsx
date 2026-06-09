@@ -24,7 +24,7 @@ export default function ModelViewer() {
           </Center>
           <Environment preset="city" />
         </Suspense>
-        <OrbitControls enablePan={false} minDistance={0.2} maxDistance={8} />
+        <OrbitControls minDistance={0.2} maxDistance={8} />
       </Canvas>
     </div>
   );
