@@ -295,8 +295,7 @@ function XYZSliders({
   );
 }
 
-// ─── Section: Transform ───────────────────────────────────────────────────────
-
+// Section: Transform
 export function TransformSection({
   transform,
   setTransform,
@@ -390,8 +389,7 @@ export function TransformSection({
   );
 }
 
-// ─── Section: Ambient Light ───────────────────────────────────────────────────
-
+// Section: Ambient Light
 export function AmbientSection({
   light,
   setLight,
@@ -431,8 +429,7 @@ export function AmbientSection({
   );
 }
 
-// ─── Section: Directional Light ───────────────────────────────────────────────
-
+// Section: Directional Light
 export function DirLightSection({
   label,
   light,
@@ -496,8 +493,7 @@ export function DirLightSection({
   );
 }
 
-// ─── Section: Point Light ─────────────────────────────────────────────────────
-
+// Section: Point Light
 export function PointLightSection({
   light,
   setLight,
@@ -565,8 +561,7 @@ export function PointLightSection({
   );
 }
 
-// ─── Section: Spot Light ──────────────────────────────────────────────────────
-
+// Section: Spot Light
 export function SpotLightSection({
   light,
   setLight,
@@ -635,8 +630,7 @@ export function SpotLightSection({
   );
 }
 
-// ─── Section: Environment ─────────────────────────────────────────────────────
-
+// Section: Environment
 export function EnvSection({
   env,
   setEnv,
@@ -690,8 +684,7 @@ export function EnvSection({
   );
 }
 
-// ─── Section: Camera ──────────────────────────────────────────────────────────
-
+// Section: Camera
 export function CameraSection({
   camera,
   setCamera,
@@ -841,8 +834,7 @@ export function CameraSection({
   );
 }
 
-// ─── Section: Render ──────────────────────────────────────────────────────────
-
+// Section: Render
 export function RenderSection({
   config,
   setConfig,
@@ -946,8 +938,7 @@ export function RenderSection({
   );
 }
 
-// ─── Section: Material ────────────────────────────────────────────────────────
-
+// Section: Material
 export function MaterialSection({
   config,
   setConfig,
