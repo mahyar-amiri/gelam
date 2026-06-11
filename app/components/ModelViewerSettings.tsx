@@ -3,6 +3,7 @@
 import { Suspense, useRef, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, useGLTF, OrbitControls } from "@react-three/drei";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import {
   CameraController,
@@ -133,6 +134,8 @@ export default function ModelViewerSettings() {
   const [renderConfig, setRenderConfig] = useState<RenderConfig>(D_RENDER);
   const [material, setMaterial] = useState<MaterialOverride>(D_MATERIAL);
 
+  const orbitRef = useRef<OrbitControlsImpl>(null);
+
   function resetAll() {
     setTransform(D_TRANSFORM);
     setAutoRotate(D_AUTO_ROTATE);
@@ -163,14 +166,18 @@ export default function ModelViewerSettings() {
             gl={{ logarithmicDepthBuffer: true }}
             shadows={renderConfig.shadowsEnabled}
           >
-            <CameraController config={camera} />
+            <CameraController config={camera} orbitControlsRef={orbitRef} />
             <RenderSettings config={renderConfig} />
             <SceneLights
               ambient={ambient}
               dir1={dir1}
+              setDir1={setDir1}
               dir2={dir2}
+              setDir2={setDir2}
               point={point}
+              setPoint={setPoint}
               spot={spot}
+              setSpot={setSpot}
               renderConfig={renderConfig}
             />
             <Suspense fallback={null}>
@@ -189,6 +196,7 @@ export default function ModelViewerSettings() {
             </Suspense>
             {camera.orbitEnabled && (
               <OrbitControls
+                ref={orbitRef}
                 makeDefault
                 minDistance={camera.minDistance}
                 maxDistance={camera.maxDistance}
@@ -200,6 +208,33 @@ export default function ModelViewerSettings() {
                 autoRotateSpeed={camera.autoRotateOrbitSpeed}
                 dampingFactor={camera.dampingFactor}
                 enableDamping
+                onChange={(e) => {
+                  if (!e) return;
+                  const target = e.target;
+                  if (target.object) {
+                    const pos = target.object.position;
+                    const tgt = target.target;
+
+                    if (
+                      Math.abs(camera.posX - pos.x) > 0.01 ||
+                      Math.abs(camera.posY - pos.y) > 0.01 ||
+                      Math.abs(camera.posZ - pos.z) > 0.01 ||
+                      Math.abs(camera.targetX - tgt.x) > 0.01 ||
+                      Math.abs(camera.targetY - tgt.y) > 0.01 ||
+                      Math.abs(camera.targetZ - tgt.z) > 0.01
+                    ) {
+                      setCamera((c) => ({
+                        ...c,
+                        posX: pos.x,
+                        posY: pos.y,
+                        posZ: pos.z,
+                        targetX: tgt.x,
+                        targetY: tgt.y,
+                        targetZ: tgt.z,
+                      }));
+                    }
+                  }
+                }}
               />
             )}
           </Canvas>

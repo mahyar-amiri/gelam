@@ -11,7 +11,7 @@ export interface Transform {
 export interface AutoRotate {
   enabled: boolean;
   speed: number;
-  axis?: "x" | "y" | "z";
+  axis: "x" | "y" | "z";
 }
 
 export interface AmbientLight {
