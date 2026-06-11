@@ -171,9 +171,13 @@ export default function ModelViewerSettings() {
             <SceneLights
               ambient={ambient}
               dir1={dir1}
+              setDir1={setDir1}
               dir2={dir2}
+              setDir2={setDir2}
               point={point}
+              setPoint={setPoint}
               spot={spot}
+              setSpot={setSpot}
               renderConfig={renderConfig}
             />
             <Suspense fallback={null}>

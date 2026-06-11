@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
+import { PivotControls } from "@react-three/drei";
 import {
   AmbientLight,
   DirectionalLight,
@@ -107,16 +108,24 @@ export function RenderSettings({ config }: { config: RenderConfig }) {
 export function SceneLights({
   ambient,
   dir1,
+  setDir1,
   dir2,
+  setDir2,
   point,
+  setPoint,
   spot,
+  setSpot,
   renderConfig,
 }: {
   ambient: AmbientLight;
   dir1: DirectionalLight;
+  setDir1?: React.Dispatch<React.SetStateAction<DirectionalLight>>;
   dir2: DirectionalLight;
+  setDir2?: React.Dispatch<React.SetStateAction<DirectionalLight>>;
   point: PointLight;
+  setPoint?: React.Dispatch<React.SetStateAction<PointLight>>;
   spot: SpotLight;
+  setSpot?: React.Dispatch<React.SetStateAction<SpotLight>>;
   renderConfig: RenderConfig;
 }) {
   return (
@@ -131,10 +140,21 @@ export function SceneLights({
             color={dir1.color}
             castShadow={renderConfig.shadowsEnabled && dir1.castShadow}
           />
-          <mesh position={[dir1.posX, dir1.posY, dir1.posZ]}>
-            <sphereGeometry args={[dir1.intensity * 0.1, 16, 16]} />
-            <meshBasicMaterial color={dir1.color} />
-          </mesh>
+          <PivotControls
+            matrix={new THREE.Matrix4().setPosition(dir1.posX, dir1.posY, dir1.posZ)}
+            onDrag={(matrix) => {
+              const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
+              setDir1?.(prev => ({ ...prev, posX: pos.x, posY: pos.y, posZ: pos.z }));
+            }}
+            scale={0.5}
+            anchor={[0, 0, 0]}
+            depthTest={false}
+          >
+            <mesh>
+              <sphereGeometry args={[dir1.intensity * 0.05, 16, 16]} />
+              <meshBasicMaterial color={dir1.color} />
+            </mesh>
+          </PivotControls>
         </>
       )}
       {dir2.enabled && (
@@ -145,10 +165,21 @@ export function SceneLights({
             color={dir2.color}
             castShadow={renderConfig.shadowsEnabled && dir2.castShadow}
           />
-          <mesh position={[dir2.posX, dir2.posY, dir2.posZ]}>
-            <sphereGeometry args={[dir2.intensity * 0.1, 16, 16]} />
-            <meshBasicMaterial color={dir2.color} />
-          </mesh>
+          <PivotControls
+            matrix={new THREE.Matrix4().setPosition(dir2.posX, dir2.posY, dir2.posZ)}
+            onDrag={(matrix) => {
+              const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
+              setDir2?.(prev => ({ ...prev, posX: pos.x, posY: pos.y, posZ: pos.z }));
+            }}
+            scale={0.5}
+            anchor={[0, 0, 0]}
+            depthTest={false}
+          >
+            <mesh>
+              <sphereGeometry args={[dir2.intensity * 0.05, 16, 16]} />
+              <meshBasicMaterial color={dir2.color} />
+            </mesh>
+          </PivotControls>
         </>
       )}
       {point.enabled && (
@@ -160,10 +191,21 @@ export function SceneLights({
             distance={point.distance}
             decay={point.decay}
           />
-          <mesh position={[point.posX, point.posY, point.posZ]}>
-            <sphereGeometry args={[point.intensity * 0.1, 16, 16]} />
-            <meshBasicMaterial color={point.color} />
-          </mesh>
+          <PivotControls
+            matrix={new THREE.Matrix4().setPosition(point.posX, point.posY, point.posZ)}
+            onDrag={(matrix) => {
+              const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
+              setPoint?.(prev => ({ ...prev, posX: pos.x, posY: pos.y, posZ: pos.z }));
+            }}
+            scale={0.5}
+            anchor={[0, 0, 0]}
+            depthTest={false}
+          >
+            <mesh>
+              <sphereGeometry args={[point.intensity * 0.05, 16, 16]} />
+              <meshBasicMaterial color={point.color} />
+            </mesh>
+          </PivotControls>
         </>
       )}
       {spot.enabled && (
@@ -176,10 +218,21 @@ export function SceneLights({
             penumbra={spot.penumbra}
             castShadow={renderConfig.shadowsEnabled}
           />
-          <mesh position={[spot.posX, spot.posY, spot.posZ]}>
-            <sphereGeometry args={[spot.intensity * 0.1, 16, 16]} />
-            <meshBasicMaterial color={spot.color} />
-          </mesh>
+          <PivotControls
+            matrix={new THREE.Matrix4().setPosition(spot.posX, spot.posY, spot.posZ)}
+            onDrag={(matrix) => {
+              const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
+              setSpot?.(prev => ({ ...prev, posX: pos.x, posY: pos.y, posZ: pos.z }));
+            }}
+            scale={0.5}
+            anchor={[0, 0, 0]}
+            depthTest={false}
+          >
+            <mesh>
+              <sphereGeometry args={[spot.intensity * 0.05, 16, 16]} />
+              <meshBasicMaterial color={spot.color} />
+            </mesh>
+          </PivotControls>
         </>
       )}
     </>
