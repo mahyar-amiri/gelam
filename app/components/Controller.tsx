@@ -369,7 +369,7 @@ export function TransformSection({
               />
               <Select
                 label="Axis"
-                value={autoRotate.axis}
+                value={autoRotate.axis || "y"}
                 options={["x", "y", "z"]}
                 onChange={(v) =>
                   setAutoRotate((s) => ({ ...s, axis: v as "x" | "y" | "z" }))
@@ -805,28 +805,24 @@ export function CameraSection({
             </>
           )}
 
-          {!camera.orbitEnabled && (
-            <>
-              <SubLabel>Position</SubLabel>
-              <XYZSliders
-                prefix="Cam"
-                values={[camera.posX, camera.posY, camera.posZ]}
-                onChange={(ax, v) => set(("pos" + ax) as keyof CameraConfig, v)}
-                min={-20}
-                max={20}
-              />
-              <SubLabel>Look-at target</SubLabel>
-              <XYZSliders
-                prefix="Tgt"
-                values={[camera.targetX, camera.targetY, camera.targetZ]}
-                onChange={(ax, v) =>
-                  set(("target" + ax) as keyof CameraConfig, v)
-                }
-                min={-10}
-                max={10}
-              />
-            </>
-          )}
+          <SubLabel>Position</SubLabel>
+          <XYZSliders
+            prefix="Cam"
+            values={[camera.posX, camera.posY, camera.posZ]}
+            onChange={(ax, v) => set(("pos" + ax) as keyof CameraConfig, v)}
+            min={-20}
+            max={20}
+          />
+          <SubLabel>Look-at target</SubLabel>
+          <XYZSliders
+            prefix="Tgt"
+            values={[camera.targetX, camera.targetY, camera.targetZ]}
+            onChange={(ax, v) =>
+              set(("target" + ax) as keyof CameraConfig, v)
+            }
+            min={-10}
+            max={10}
+          />
           <ResetBtn onClick={() => setCamera(D_CAMERA)} />
         </div>
       )}
