@@ -11,7 +11,7 @@ export interface Transform {
 export interface AutoRotate {
   enabled: boolean;
   speed: number;
-  axis: "x" | "y" | "z";
+  axis?: "x" | "y" | "z";
 }
 
 export interface AmbientLight {
@@ -100,4 +100,15 @@ export interface MaterialOverride {
   color: string;
   opacity: number;
   transparent: boolean;
+}
+
+export interface LightConfig {
+  ambientIntensity: number;
+  dirIntensity: number;
+  dirX: number;
+  dirY: number;
+  dirZ: number;
+  dirColor: string;
+  envPreset: string;
+  showEnv: boolean;
 }
