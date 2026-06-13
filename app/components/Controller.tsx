@@ -369,7 +369,7 @@ export function TransformSection({
               />
               <Select
                 label="Axis"
-                value={autoRotate.axis}
+                value={autoRotate.axis || "y"}
                 options={["x", "y", "z"]}
                 onChange={(v) =>
                   setAutoRotate((s) => ({ ...s, axis: v as "x" | "y" | "z" }))
