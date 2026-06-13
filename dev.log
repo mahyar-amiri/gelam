@@ -2,40 +2,8 @@
 > gelam-website@0.1.0 dev
 > next dev
 
+⚠ Port 3000 is in use by an unknown process, using available port 3001 instead.
 ▲ Next.js 16.2.7 (Turbopack)
-- Local:         http://localhost:3000
-- Network:       http://192.168.0.2:3000
-✓ Ready in 567ms
-
-○ Compiling /test ...
- GET /test 200 in 7.3s (next.js: 6.4s, application-code: 970ms)
-[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
- GET /test2 200 in 1257ms (next.js: 1075ms, application-code: 182ms)
-[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
- GET /test 200 in 1973ms (next.js: 956ms, application-code: 1017ms)
-[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
- GET /test2 200 in 245ms (next.js: 35ms, application-code: 210ms)
-[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
- GET /test 200 in 68ms (next.js: 5ms, application-code: 63ms)
-[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
- GET /test2 200 in 78ms (next.js: 5ms, application-code: 73ms)
-[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
-[browser] You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.
-[?25h
+- Local:         http://localhost:3001
+- Network:       http://192.168.0.2:3001
+✓ Ready in 1048ms

@@ -14,7 +14,7 @@ import {
 import * as THREE from "three";
 import { EffectComposer, DepthOfField } from "@react-three/postprocessing";
 
-function Wand({ scrollRef }: { scrollRef: React.MutableRefObject<number> }) {
+function Wand({ scrollRef }: { scrollRef: React.MutableRefObject<any> }) {
   const { scene } = useGLTF("/the_elder_wand.glb");
   const groupRef = useRef<THREE.Group>(null);
 
@@ -108,7 +108,7 @@ function Scene() {
   const scrollData = useScroll();
   const { camera } = useThree();
   const scrollRef = useRef(scrollData);
-  const dofRef = useRef<typeof DepthOfField>(null);
+  const dofRef = useRef<any>(null);
 
 
   useEffect(() => {
@@ -123,19 +123,26 @@ function Scene() {
     const blurAmount = r1 - r4;
 
     if (dofRef.current) {
-      // Assuming wand is at z=4 at its closest, z=0 initially.
-      // Our camera is at z=5.
-      // In Wand component: posZ is initially 0, then += r1 * 4. So max posZ = 4.
-      // The box is at z=-2.
+      const r2 = scrollRef.current.range(1/4, 1/4);
+      const r3 = scrollRef.current.range(2/4, 1/4);
 
-      // When blurAmount is 0 (start and end), focus distance should cover everything or focalLength should be 0.
-      // The user wants depth of field where wand is sharp and background is blurred when scrolled.
+      let posX = 0;
+      let posY = 2;
+      let posZ = r1 * 4;
 
-      // Distance from camera (z=5) to Wand (z changes from 0 to 4)
-      const wandZ = r1 * 4 - r4 * 4;
-      const distToWand = Math.abs(5 - wandZ);
+      posX += r2 * 3;
+      posY += r2 * -0.5;
 
-      dofRef.current.focusDistance = distToWand / camera.far;
+      posX -= r3 * 3;
+
+      posZ -= r4 * 4;
+      posY -= r4 * 1.5;
+
+      // Update target to follow the wand exactly
+      if (dofRef.current.target) {
+        dofRef.current.target.set(posX, posY, posZ);
+      }
+
       dofRef.current.focalLength = THREE.MathUtils.lerp(0, 0.1, blurAmount);
       dofRef.current.bokehScale = blurAmount * 5;
     }
@@ -154,7 +161,7 @@ function Scene() {
       <EffectComposer>
         <DepthOfField
           ref={dofRef}
-          target={[0, 0, 0]}
+          target={[0, 2, 0]}
           focusDistance={0.05}
           focalLength={0}
           bokehScale={2}
