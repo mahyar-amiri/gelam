@@ -1,24 +1,24 @@
 // Approach 1: 3D Transmission Plane. This approach uses a 3D plane with MeshTransmissionMaterial placed between the wand and the box in the 3D scene. This creates a realistic frosted glass effect that blurs the objects behind it (the box and the scene background).
 "use client";
 
-import { Suspense, useRef, useState, useEffect } from "react";
+import { Suspense, useRef, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   useGLTF,
   ScrollControls,
   Scroll,
   useScroll,
-  MeshTransmissionMaterial,
   Environment,
   PresentationControls
 } from "@react-three/drei";
 import * as THREE from "three";
+import { EffectComposer, DepthOfField } from "@react-three/postprocessing";
 
-function Wand({ scrollRef }: { scrollRef: { current: any } }) {
+function Wand({ scrollRef }: { scrollRef: React.MutableRefObject<number> }) {
   const { scene } = useGLTF("/the_elder_wand.glb");
   const groupRef = useRef<THREE.Group>(null);
 
-  useFrame((state, delta) => {
+  useFrame(() => {
     const r1 = scrollRef.current.range(0, 1/4);
     const r2 = scrollRef.current.range(1/4, 1/4);
     const r3 = scrollRef.current.range(2/4, 1/4);
@@ -93,44 +93,6 @@ function Box() {
   );
 }
 
-function BlurPlane({ scrollRef }: { scrollRef: { current: any } }) {
-  const materialRef = useRef<any>(null);
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame(() => {
-    const r1 = scrollRef.current.range(0, 1/4); // Blur in
-    const r4 = scrollRef.current.range(3/4, 1/4); // Blur out
-
-    // Total blur intensity
-    const blurAmount = r1 - r4;
-
-    if (materialRef.current) {
-      materialRef.current.transmission = blurAmount * 0.9;
-      materialRef.current.roughness = blurAmount * 0.6;
-    }
-
-    // Hide entirely if no blur needed to save performance
-    if (meshRef.current) {
-      meshRef.current.visible = blurAmount > 0.01;
-    }
-  });
-
-  return (
-    <mesh ref={meshRef} position={[0, 0, -1]}>
-      <planeGeometry args={[50, 50]} />
-      <MeshTransmissionMaterial
-        ref={materialRef}
-        background={new THREE.Color('#000000')}
-        transmission={0}
-        thickness={1}
-        roughness={0}
-        ior={1.5}
-        transparent={true}
-        opacity={1}
-      />
-    </mesh>
-  );
-}
 
 function Background() {
   const texture = new THREE.TextureLoader().load('/background.jpg');
@@ -144,15 +106,40 @@ function Background() {
 
 function Scene() {
   const scrollData = useScroll();
-  // Using an object ref to hold current scrollData and pass it down since useScroll must be inside <ScrollControls>
+  const { camera } = useThree();
   const scrollRef = useRef(scrollData);
-  // Instead of assigning during render, we use a simple object passed to children since useScroll() returns an object with methods.
-  // Actually, we can just pass scrollData directly.
+  const dofRef = useRef<typeof DepthOfField>(null);
 
-  // Update ref in effect instead of render
+
   useEffect(() => {
     scrollRef.current = scrollData;
   }, [scrollData]);
+
+  useFrame(() => {
+    const r1 = scrollRef.current.range(0, 1/4); // Blur in
+    const r4 = scrollRef.current.range(3/4, 1/4); // Blur out
+
+    // Total blur intensity
+    const blurAmount = r1 - r4;
+
+    if (dofRef.current) {
+      // Assuming wand is at z=4 at its closest, z=0 initially.
+      // Our camera is at z=5.
+      // In Wand component: posZ is initially 0, then += r1 * 4. So max posZ = 4.
+      // The box is at z=-2.
+
+      // When blurAmount is 0 (start and end), focus distance should cover everything or focalLength should be 0.
+      // The user wants depth of field where wand is sharp and background is blurred when scrolled.
+
+      // Distance from camera (z=5) to Wand (z changes from 0 to 4)
+      const wandZ = r1 * 4 - r4 * 4;
+      const distToWand = Math.abs(5 - wandZ);
+
+      dofRef.current.focusDistance = distToWand / camera.far;
+      dofRef.current.focalLength = THREE.MathUtils.lerp(0, 0.1, blurAmount);
+      dofRef.current.bokehScale = blurAmount * 5;
+    }
+  });
 
   return (
     <>
@@ -162,8 +149,18 @@ function Scene() {
 
       <Background />
       <Box />
-      <BlurPlane scrollRef={scrollRef} />
       <Wand scrollRef={scrollRef} />
+
+      <EffectComposer>
+        <DepthOfField
+          ref={dofRef}
+          target={[0, 0, 0]}
+          focusDistance={0.05}
+          focalLength={0}
+          bokehScale={2}
+          height={480}
+        />
+      </EffectComposer>
     </>
   );
 }
