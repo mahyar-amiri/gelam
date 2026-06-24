@@ -80,6 +80,12 @@ export interface CameraConfig {
   dampingFactor: number;
 }
 
+export interface DOFConfig {
+  enabled: boolean;
+  focalLength: number;
+  bokehScale: number;
+}
+
 export interface RenderConfig {
   toneMapping: string;
   toneMappingExposure: number;

@@ -4,6 +4,7 @@ import { Suspense, useRef, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, useGLTF, OrbitControls } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
+import { EffectComposer, DepthOfField } from "@react-three/postprocessing";
 import * as THREE from "three";
 import {
   CameraController,
@@ -19,6 +20,7 @@ import {
   SpotLight,
   EnvConfig,
   CameraConfig,
+  DOFConfig,
   RenderConfig,
   MaterialOverride,
 } from "@/types/controller";
@@ -32,6 +34,7 @@ import {
   D_SPOT,
   D_ENV,
   D_CAMERA,
+  D_DOF,
   D_RENDER,
   D_MATERIAL,
 } from "@/consts/controller";
@@ -39,6 +42,7 @@ import {
   Divider,
   TransformSection,
   CameraSection,
+  DoFSection,
   AmbientSection,
   DirLightSection,
   PointLightSection,
@@ -48,8 +52,8 @@ import {
   MaterialSection,
 } from "@/components/Controller";
 
-// const MODEL_NAME = "/the_elder_wand.glb";
-const MODEL_NAME = "/wooden_box.glb";
+const MODEL_NAME = "/the_elder_wand.glb";
+// const MODEL_NAME = "/wooden_box.glb";
 
 // Model
 function Model({
@@ -57,11 +61,13 @@ function Model({
   autoRotate,
   renderConfig,
   materialConfig,
+  onModelClick,
 }: {
   transform: Transform;
   autoRotate: AutoRotate;
   renderConfig: RenderConfig;
   materialConfig: MaterialOverride;
+  onModelClick: (point: THREE.Vector3) => void;
 }) {
   const { scene } = useGLTF(MODEL_NAME);
   const groupRef = useRef<THREE.Group>(null);
@@ -109,6 +115,10 @@ function Model({
         THREE.MathUtils.degToRad(transform.rotZ),
       ]}
       scale={transform.scale}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        onModelClick(e.point); // Pass the exact 3D coordinate clicked
+      }}
     >
       <primitive object={scene} />
     </group>
@@ -131,6 +141,8 @@ export default function ModelViewerSettings() {
   const [spot, setSpot] = useState<SpotLight>(D_SPOT);
   const [env, setEnv] = useState<EnvConfig>(D_ENV);
   const [camera, setCamera] = useState<CameraConfig>(D_CAMERA);
+  const [dof, setDof] = useState<DOFConfig>(D_DOF);
+  const [focusTarget, setFocusTarget] = useState<THREE.Vector3 | null>(null);
   const [renderConfig, setRenderConfig] = useState<RenderConfig>(D_RENDER);
   const [material, setMaterial] = useState<MaterialOverride>(D_MATERIAL);
 
@@ -146,6 +158,8 @@ export default function ModelViewerSettings() {
     setSpot(D_SPOT);
     setEnv(D_ENV);
     setCamera(D_CAMERA);
+    setDof(D_DOF);
+    setFocusTarget(null);
     setRenderConfig(D_RENDER);
     setMaterial(D_MATERIAL);
   }
@@ -186,6 +200,7 @@ export default function ModelViewerSettings() {
                 autoRotate={autoRotate}
                 renderConfig={renderConfig}
                 materialConfig={material}
+                onModelClick={(point) => setFocusTarget(point)}
               />
               <Environment
                 preset={env.preset as any}
@@ -194,6 +209,16 @@ export default function ModelViewerSettings() {
                 environmentIntensity={env.envIntensity}
               />
             </Suspense>
+            {dof.enabled && (
+              <EffectComposer enableNormalPass={false}>
+                <DepthOfField
+                  target={focusTarget || undefined} // Focuses on clicked point
+                  focalLength={dof.focalLength}
+                  bokehScale={dof.bokehScale}
+                  height={480}
+                />
+              </EffectComposer>
+            )}
             {camera.orbitEnabled && (
               <OrbitControls
                 ref={orbitRef}
@@ -303,6 +328,8 @@ export default function ModelViewerSettings() {
             />
             <Divider />
             <CameraSection camera={camera} setCamera={setCamera} />
+            <Divider />
+            <DoFSection dof={dof} setDof={setDof} />
             <Divider />
             <AmbientSection light={ambient} setLight={setAmbient} />
             <Divider />

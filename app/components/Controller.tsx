@@ -10,6 +10,7 @@ import {
   SpotLight,
   EnvConfig,
   CameraConfig,
+  DOFConfig,
   RenderConfig,
   MaterialOverride,
 } from "@/types/controller";
@@ -21,6 +22,7 @@ import {
   D_SPOT,
   D_ENV,
   D_CAMERA,
+  D_DOF,
   D_RENDER,
   D_MATERIAL,
   ENV_PRESETS,
@@ -307,7 +309,7 @@ export function TransformSection({
   autoRotate: AutoRotate;
   setAutoRotate: React.Dispatch<React.SetStateAction<AutoRotate>>;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const set = useCallback(
     <K extends keyof Transform>(k: K, v: Transform[K]) =>
       setTransform((s) => ({ ...s, [k]: v })),
@@ -356,27 +358,23 @@ export function TransformSection({
             checked={autoRotate.enabled}
             onChange={(v) => setAutoRotate((s) => ({ ...s, enabled: v }))}
           />
-          {autoRotate.enabled && (
-            <>
-              <Slider
-                label="Speed"
-                value={autoRotate.speed}
-                min={0.1}
-                max={10}
-                step={0.1}
-                onChange={(v) => setAutoRotate((s) => ({ ...s, speed: v }))}
-                displayValue={`${autoRotate.speed.toFixed(1)}×`}
-              />
-              <Select
-                label="Axis"
-                value={autoRotate.axis}
-                options={["x", "y", "z"]}
-                onChange={(v) =>
-                  setAutoRotate((s) => ({ ...s, axis: v as "x" | "y" | "z" }))
-                }
-              />
-            </>
-          )}
+          <Slider
+            label="Speed"
+            value={autoRotate.speed}
+            min={0.1}
+            max={10}
+            step={0.1}
+            onChange={(v) => setAutoRotate((s) => ({ ...s, speed: v }))}
+            displayValue={`${autoRotate.speed.toFixed(1)}×`}
+          />
+          <Select
+            label="Axis"
+            value={autoRotate.axis}
+            options={["x", "y", "z"]}
+            onChange={(v) =>
+              setAutoRotate((s) => ({ ...s, axis: v as "x" | "y" | "z" }))
+            }
+          />
           <ResetBtn
             onClick={() => {
               setTransform(D_TRANSFORM);
@@ -827,6 +825,57 @@ export function CameraSection({
   );
 }
 
+// Section: Depth of Field (DoF)
+export function DoFSection({
+  dof,
+  setDof,
+}: {
+  dof: DOFConfig;
+  setDof: React.Dispatch<React.SetStateAction<DOFConfig>>;
+}) {
+  const [open, setOpen] = useState(false);
+  const set = <K extends keyof DOFConfig>(k: K, v: DOFConfig[K]) =>
+    setDof((s) => ({ ...s, [k]: v }));
+
+  return (
+    <>
+      <SectionHeader
+        label="Focus (DoF)"
+        open={open}
+        onToggle={() => setOpen((s) => !s)}
+        badge={dof.enabled ? "on" : "off"}
+      />
+      {open && (
+        <div className="px-3 pb-3 space-y-3">
+          <Toggle
+            label="Enable DoF"
+            checked={dof.enabled}
+            onChange={(v) => set("enabled", v)}
+            desc="Click on the model to focus"
+          />
+          <Slider
+            label="Focal Length"
+            value={dof.focalLength}
+            min={0.001}
+            max={0.1}
+            step={0.001}
+            onChange={(v) => set("focalLength", v)}
+          />
+          <Slider
+            label="Bokeh Scale"
+            value={dof.bokehScale}
+            min={0}
+            max={10}
+            step={0.1}
+            onChange={(v) => set("bokehScale", v)}
+          />
+          <ResetBtn onClick={() => setDof(D_DOF)} />
+        </div>
+      )}
+    </>
+  );
+}
+
 // Section: Render
 export function RenderSection({
   config,
@@ -960,44 +1009,40 @@ export function MaterialSection({
             onChange={(v) => set("enabled", v)}
             desc="Overrides all mesh materials"
           />
-          {config.enabled && (
-            <>
-              <ColorPicker
-                label="Color"
-                value={config.color}
-                onChange={(v) => set("color", v)}
-              />
-              <Slider
-                label="Roughness"
-                value={config.roughness}
-                min={0}
-                max={1}
-                step={0.01}
-                onChange={(v) => set("roughness", v)}
-              />
-              <Slider
-                label="Metalness"
-                value={config.metalness}
-                min={0}
-                max={1}
-                step={0.01}
-                onChange={(v) => set("metalness", v)}
-              />
-              <Slider
-                label="Opacity"
-                value={config.opacity}
-                min={0}
-                max={1}
-                step={0.01}
-                onChange={(v) => set("opacity", v)}
-              />
-              <Toggle
-                label="Transparent"
-                checked={config.transparent}
-                onChange={(v) => set("transparent", v)}
-              />
-            </>
-          )}
+          <ColorPicker
+            label="Color"
+            value={config.color}
+            onChange={(v) => set("color", v)}
+          />
+          <Slider
+            label="Roughness"
+            value={config.roughness}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={(v) => set("roughness", v)}
+          />
+          <Slider
+            label="Metalness"
+            value={config.metalness}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={(v) => set("metalness", v)}
+          />
+          <Slider
+            label="Opacity"
+            value={config.opacity}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={(v) => set("opacity", v)}
+          />
+          <Toggle
+            label="Transparent"
+            checked={config.transparent}
+            onChange={(v) => set("transparent", v)}
+          />
           <ResetBtn onClick={() => setConfig(D_MATERIAL)} />
         </div>
       )}

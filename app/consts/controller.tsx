@@ -9,13 +9,14 @@ import {
   CameraConfig,
   RenderConfig,
   MaterialOverride,
+  DOFConfig,
 } from "@/types/controller";
 
 export const D_TRANSFORM: Transform = {
   posX: 0,
   posY: 0,
-  posZ: 0,
-  rotX: 0,
+  posZ: 0.02,
+  rotX: 90,
   rotY: 0,
   rotZ: 0,
   scale: 1,
@@ -98,6 +99,12 @@ export const D_CAMERA: CameraConfig = {
   autoRotateOrbit: false,
   autoRotateOrbitSpeed: 2,
   dampingFactor: 0.05,
+};
+
+export const D_DOF: DOFConfig = {
+  enabled: false,
+  focalLength: 0.02, // Controls how deep the in-focus area is
+  bokehScale: 2, // Controls the intensity of the blur
 };
 
 export const D_RENDER: RenderConfig = {
