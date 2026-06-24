@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Transform,
   AutoRotate,
@@ -293,6 +293,115 @@ function XYZSliders({
         step={step}
         onChange={(v) => onChange("Z", v)}
       />
+    </>
+  );
+}
+
+// Section: Model Uploader
+export function ModelUploaderSection({
+  selectedModel,
+  onSelectModel,
+}: {
+  selectedModel: string;
+  onSelectModel: (url: string) => void;
+}) {
+  const [open, setOpen] = useState(true);
+  const [models, setModels] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const fetchModels = async () => {
+    try {
+      const res = await fetch("/api/models");
+      const data = await res.json();
+      if (data.models) setModels(data.models);
+    } catch (e) {
+      console.error("Error fetching models:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchModels();
+  }, []);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/models", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchModels();
+        onSelectModel(`/models/${data.name}`);
+      }
+    } catch (error) {
+      console.error("Upload failed", error);
+    } finally {
+      setIsUploading(false);
+      if (e.target) e.target.value = ""; // Reset input
+    }
+  };
+
+  return (
+    <>
+      <SectionHeader
+        label="Model Uploader"
+        open={open}
+        onToggle={() => setOpen((s) => !s)}
+      />
+      {open && (
+        <div className="px-3 pb-3 space-y-3">
+          <div className="flex flex-col gap-2">
+            <SubLabel>Available Models</SubLabel>
+            <div className="flex flex-col gap-1 max-h-40 overflow-y-auto pr-1">
+              {models.length === 0 && (
+                <span className="text-[11px] text-zinc-500">No models found in public/models</span>
+              )}
+              {models.map((m) => {
+                const modelUrl = `/models/${m}`;
+                const isActive = selectedModel === modelUrl;
+                return (
+                  <button
+                    key={m}
+                    onClick={() => onSelectModel(modelUrl)}
+                    className={`text-left text-[11px] px-2 py-1.5 rounded-md transition-colors cursor-pointer truncate ${
+                      isActive
+                        ? "bg-amber-500/20 text-amber-400"
+                        : "text-zinc-400 hover:bg-zinc-800"
+                    }`}
+                    title={m}
+                  >
+                    {m}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
+          <Divider />
+          
+          <div>
+            <SubLabel>Upload New Model</SubLabel>
+            <label className="mt-1 flex items-center justify-center w-full px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-amber-500 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-500/50 rounded-full transition-all cursor-pointer text-center">
+              {isUploading ? "Uploading..." : "Select .glb / .gltf"}
+              <input
+                type="file"
+                accept=".glb,.gltf"
+                className="hidden"
+                onChange={handleUpload}
+                disabled={isUploading}
+              />
+            </label>
+          </div>
+        </div>
+      )}
     </>
   );
 }

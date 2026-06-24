@@ -2,7 +2,12 @@
 
 import { Suspense, useRef, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, useGLTF, OrbitControls } from "@react-three/drei";
+import {
+  Environment,
+  useGLTF,
+  OrbitControls,
+  useProgress,
+} from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { EffectComposer, DepthOfField } from "@react-three/postprocessing";
 import * as THREE from "three";
@@ -40,6 +45,7 @@ import {
 } from "@/consts/controller";
 import {
   Divider,
+  ModelUploaderSection,
   TransformSection,
   CameraSection,
   DoFSection,
@@ -52,30 +58,48 @@ import {
   MaterialSection,
 } from "@/components/Controller";
 
-const MODEL_NAME = "/the_elder_wand.glb";
-// const MODEL_NAME = "/wooden_box.glb";
+function LoadingOverlay() {
+  const { active, progress } = useProgress();
+
+  // Hide the overlay when nothing is loading
+  if (!active) return null;
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none transition-opacity duration-300">
+      <div className="flex flex-col items-center justify-center gap-3 bg-zinc-950/80 px-6 py-4 rounded-xl backdrop-blur-md border border-zinc-800 shadow-2xl">
+        <div className="w-8 h-8 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+        <div className="text-amber-500 font-mono text-[11px] tracking-widest">
+          {progress.toFixed(0)}%
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Model
 function Model({
+  url,
   transform,
   autoRotate,
   renderConfig,
   materialConfig,
   onModelClick,
 }: {
+  url: string;
   transform: Transform;
   autoRotate: AutoRotate;
   renderConfig: RenderConfig;
   materialConfig: MaterialOverride;
   onModelClick: (point: THREE.Vector3) => void;
 }) {
-  const { scene } = useGLTF(MODEL_NAME);
+  const { scene } = useGLTF(url);
   const groupRef = useRef<THREE.Group>(null);
 
   // Apply wireframe & material overrides
   useEffect(() => {
     scene.traverse((obj: any) => {
       if (obj.isMesh && obj.material) {
+        // ... (keep existing material logic)
         const mats = Array.isArray(obj.material)
           ? obj.material
           : [obj.material];
@@ -125,11 +149,13 @@ function Model({
   );
 }
 
-useGLTF.preload(MODEL_NAME);
+// useGLTF.preload(MODEL_NAME);
 
 // Main Component
 export default function ModelViewerSettings() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const [activeModelUrl, setActiveModelUrl] = useState<string | null>(null);
 
   // State for all scene parameters
   const [transform, setTransform] = useState<Transform>(D_TRANSFORM);
@@ -195,13 +221,16 @@ export default function ModelViewerSettings() {
               renderConfig={renderConfig}
             />
             <Suspense fallback={null}>
-              <Model
-                transform={transform}
-                autoRotate={autoRotate}
-                renderConfig={renderConfig}
-                materialConfig={material}
-                onModelClick={(point) => setFocusTarget(point)}
-              />
+              {activeModelUrl && (
+                <Model
+                  url={activeModelUrl}
+                  transform={D_TRANSFORM}
+                  autoRotate={D_AUTO_ROTATE}
+                  renderConfig={D_RENDER}
+                  materialConfig={D_MATERIAL}
+                  onModelClick={(point) => setFocusTarget(point)}
+                />
+              )}
               <Environment
                 preset={env.preset as any}
                 background={env.showBackground && renderConfig.useEnvBackground}
@@ -212,7 +241,7 @@ export default function ModelViewerSettings() {
             {dof.enabled && (
               <EffectComposer enableNormalPass={false}>
                 <DepthOfField
-                  target={focusTarget || undefined} // Focuses on clicked point
+                  target={focusTarget || undefined}
                   focalLength={dof.focalLength}
                   bokehScale={dof.bokehScale}
                   height={480}
@@ -263,6 +292,7 @@ export default function ModelViewerSettings() {
               />
             )}
           </Canvas>
+          <LoadingOverlay />
         </div>
 
         {/* Sidebar toggle */}
@@ -320,6 +350,11 @@ export default function ModelViewerSettings() {
               scrollbarColor: "#3f3f46 transparent",
             }}
           >
+            <ModelUploaderSection
+              selectedModel={activeModelUrl}
+              onSelectModel={setActiveModelUrl}
+            />
+            <Divider />
             <TransformSection
               transform={transform}
               setTransform={setTransform}
