@@ -25,9 +25,6 @@ import {
   DirectionalLight,
   PointLight,
   SpotLight,
-
-
-
   RenderConfig,
   MaterialOverride,
 } from "@/types/controller";
@@ -137,26 +134,55 @@ function Model({
 }
 
 export default function ModelViewerSettings() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeModelUrl, setActiveModelUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("activeModelUrl");
+    if (saved) setActiveModelUrl(saved);
+  }, []);
+
+  useEffect(() => {
+    if (activeModelUrl) {
+      localStorage.setItem("activeModelUrl", activeModelUrl);
+    } else {
+      localStorage.removeItem("activeModelUrl");
+    }
+  }, [activeModelUrl]);
+
   const [focusTarget, setFocusTarget] = useState<THREE.Vector3 | null>(null);
 
   const orbitRef = useRef<OrbitControlsImpl>(null);
 
-  const transform = useControls("Transform", {
-    posX: { value: D_TRANSFORM.posX, min: -5, max: 5, step: 0.01 },
-    posY: { value: D_TRANSFORM.posY, min: -5, max: 5, step: 0.01 },
-    posZ: { value: D_TRANSFORM.posZ, min: -5, max: 5, step: 0.01 },
-    rotX: { value: D_TRANSFORM.rotX, min: -180, max: 180, step: 1 },
-    rotY: { value: D_TRANSFORM.rotY, min: -180, max: 180, step: 1 },
-    rotZ: { value: D_TRANSFORM.rotZ, min: -180, max: 180, step: 1 },
-    scale: { value: D_TRANSFORM.scale, min: 0.01, max: 10, step: 0.01 },
-    "Auto Rotate": folder({
-      autoRotateEnabled: D_AUTO_ROTATE.enabled,
-      autoRotateSpeed: { value: D_AUTO_ROTATE.speed, min: 0.1, max: 10, step: 0.1 },
-      autoRotateAxis: { options: ["x", "y", "z"], value: D_AUTO_ROTATE.axis },
+  const [transform] = useControls(
+    "Transform",
+    () => ({
+      posX: { value: D_TRANSFORM.posX, min: -5, max: 5, step: 0.01 },
+      posY: { value: D_TRANSFORM.posY, min: -5, max: 5, step: 0.01 },
+      posZ: { value: D_TRANSFORM.posZ, min: -5, max: 5, step: 0.01 },
+      rotX: { value: D_TRANSFORM.rotX, min: -180, max: 180, step: 1 },
+      rotY: { value: D_TRANSFORM.rotY, min: -180, max: 180, step: 1 },
+      rotZ: { value: D_TRANSFORM.rotZ, min: -180, max: 180, step: 1 },
+      scale: { value: D_TRANSFORM.scale, min: 0.01, max: 10, step: 0.01 },
+      "Auto Rotate": folder(
+        {
+          autoRotateEnabled: D_AUTO_ROTATE.enabled,
+          autoRotateSpeed: {
+            value: D_AUTO_ROTATE.speed,
+            min: 0.1,
+            max: 10,
+            step: 0.1,
+          },
+          autoRotateAxis: {
+            options: ["x", "y", "z"],
+            value: D_AUTO_ROTATE.axis,
+          },
+        },
+        { collapsed: true },
+      ),
     }),
-  });
+    { collapsed: true },
+  );
 
   const autoRotate = {
     enabled: transform.autoRotateEnabled,
@@ -164,113 +190,264 @@ export default function ModelViewerSettings() {
     axis: transform.autoRotateAxis as "x" | "y" | "z",
   };
 
-  const camera = useControls("Camera", {
-    fov: { value: D_CAMERA.fov, min: 10, max: 120, step: 1 },
-    near: { value: D_CAMERA.near, min: 0.0001, step: 0.001 },
-    far: { value: D_CAMERA.far, min: 1, step: 10 },
-    orbitEnabled: D_CAMERA.orbitEnabled,
-    enablePan: D_CAMERA.enablePan,
-    enableZoom: D_CAMERA.enableZoom,
-    autoRotateOrbit: D_CAMERA.autoRotateOrbit,
-    autoRotateOrbitSpeed: { value: D_CAMERA.autoRotateOrbitSpeed, min: -20, max: 20, step: 0.5 },
-    dampingFactor: { value: D_CAMERA.dampingFactor, min: 0.01, max: 0.5, step: 0.01 },
-    minDistance: { value: D_CAMERA.minDistance, min: 0.001, max: 10, step: 0.001 },
-    maxDistance: { value: D_CAMERA.maxDistance, min: 1, max: 500, step: 1 },
-    minPolarAngle: { value: D_CAMERA.minPolarAngle, min: 0, max: 180, step: 1 },
-    maxPolarAngle: { value: D_CAMERA.maxPolarAngle, min: 0, max: 180, step: 1 },
-    posX: { value: D_CAMERA.posX, min: -20, max: 20 },
-    posY: { value: D_CAMERA.posY, min: -20, max: 20 },
-    posZ: { value: D_CAMERA.posZ, min: -20, max: 20 },
-    targetX: { value: D_CAMERA.targetX, min: -10, max: 10 },
-    targetY: { value: D_CAMERA.targetY, min: -10, max: 10 },
-    targetZ: { value: D_CAMERA.targetZ, min: -10, max: 10 },
-  });
-
-  const dof = useControls("Depth of Field", {
-    enabled: D_DOF.enabled,
-    focalLength: { value: D_DOF.focalLength, min: 0.001, max: 0.1, step: 0.001 },
-    bokehScale: { value: D_DOF.bokehScale, min: 0, max: 10, step: 0.1 },
-  });
-
-  const lights = useControls("Lights", {
-    "Ambient Light": folder({
-      ambientIntensity: { value: D_AMBIENT.intensity, min: 0, max: 5, step: 0.05 },
-      ambientColor: D_AMBIENT.color,
+  const [camera, setCamera] = useControls(
+    "Camera",
+    () => ({
+      fov: { value: D_CAMERA.fov, min: 10, max: 120, step: 1 },
+      near: { value: D_CAMERA.near, min: 0.0001, step: 0.001 },
+      far: { value: D_CAMERA.far, min: 1, step: 10 },
+      orbitEnabled: D_CAMERA.orbitEnabled,
+      enablePan: D_CAMERA.enablePan,
+      enableZoom: D_CAMERA.enableZoom,
+      autoRotateOrbit: D_CAMERA.autoRotateOrbit,
+      autoRotateOrbitSpeed: {
+        value: D_CAMERA.autoRotateOrbitSpeed,
+        min: -20,
+        max: 20,
+        step: 0.5,
+      },
+      dampingFactor: {
+        value: D_CAMERA.dampingFactor,
+        min: 0.01,
+        max: 0.5,
+        step: 0.01,
+      },
+      minDistance: {
+        value: D_CAMERA.minDistance,
+        min: 0.001,
+        max: 10,
+        step: 0.001,
+      },
+      maxDistance: { value: D_CAMERA.maxDistance, min: 1, max: 500, step: 1 },
+      minPolarAngle: {
+        value: D_CAMERA.minPolarAngle,
+        min: 0,
+        max: 180,
+        step: 1,
+      },
+      maxPolarAngle: {
+        value: D_CAMERA.maxPolarAngle,
+        min: 0,
+        max: 180,
+        step: 1,
+      },
+      posX: { value: D_CAMERA.posX, min: -20, max: 20 },
+      posY: { value: D_CAMERA.posY, min: -20, max: 20 },
+      posZ: { value: D_CAMERA.posZ, min: -20, max: 20 },
+      targetX: { value: D_CAMERA.targetX, min: -10, max: 10 },
+      targetY: { value: D_CAMERA.targetY, min: -10, max: 10 },
+      targetZ: { value: D_CAMERA.targetZ, min: -10, max: 10 },
     }),
-    "Directional Light 1": folder({
-      dir1Enabled: D_DIR1.enabled,
-      dir1Intensity: { value: D_DIR1.intensity, min: 0, max: 20, step: 0.1 },
-      dir1Color: D_DIR1.color,
-      dir1PosX: D_DIR1.posX,
-      dir1PosY: D_DIR1.posY,
-      dir1PosZ: D_DIR1.posZ,
-      dir1CastShadow: D_DIR1.castShadow,
-    }),
-    "Directional Light 2": folder({
-      dir2Enabled: D_DIR2.enabled,
-      dir2Intensity: { value: D_DIR2.intensity, min: 0, max: 20, step: 0.1 },
-      dir2Color: D_DIR2.color,
-      dir2PosX: D_DIR2.posX,
-      dir2PosY: D_DIR2.posY,
-      dir2PosZ: D_DIR2.posZ,
-      dir2CastShadow: D_DIR2.castShadow,
-    }),
-    "Point Light": folder({
-      pointEnabled: D_POINT.enabled,
-      pointIntensity: { value: D_POINT.intensity, min: 0, max: 20, step: 0.1 },
-      pointColor: D_POINT.color,
-      pointPosX: D_POINT.posX,
-      pointPosY: D_POINT.posY,
-      pointPosZ: D_POINT.posZ,
-      pointDistance: { value: D_POINT.distance, min: 0, max: 50, step: 0.5 },
-      pointDecay: { value: D_POINT.decay, min: 0, max: 5, step: 0.05 },
-    }),
-    "Spot Light": folder({
-      spotEnabled: D_SPOT.enabled,
-      spotIntensity: { value: D_SPOT.intensity, min: 0, max: 50, step: 0.5 },
-      spotColor: D_SPOT.color,
-      spotPosX: D_SPOT.posX,
-      spotPosY: D_SPOT.posY,
-      spotPosZ: D_SPOT.posZ,
-      spotAngle: { value: D_SPOT.angle, min: 0, max: Math.PI / 2, step: 0.01 },
-      spotPenumbra: { value: D_SPOT.penumbra, min: 0, max: 1, step: 0.01 },
-    }),
-  });
+    { collapsed: true },
+  );
 
-  const ambient: AmbientLight = { intensity: lights.ambientIntensity, color: lights.ambientColor };
-  const dir1: DirectionalLight = { enabled: lights.dir1Enabled, intensity: lights.dir1Intensity, color: lights.dir1Color, posX: lights.dir1PosX, posY: lights.dir1PosY, posZ: lights.dir1PosZ, castShadow: lights.dir1CastShadow };
-  const dir2: DirectionalLight = { enabled: lights.dir2Enabled, intensity: lights.dir2Intensity, color: lights.dir2Color, posX: lights.dir2PosX, posY: lights.dir2PosY, posZ: lights.dir2PosZ, castShadow: lights.dir2CastShadow };
-  const point: PointLight = { enabled: lights.pointEnabled, intensity: lights.pointIntensity, color: lights.pointColor, posX: lights.pointPosX, posY: lights.pointPosY, posZ: lights.pointPosZ, distance: lights.pointDistance, decay: lights.pointDecay };
-  const spot: SpotLight = { enabled: lights.spotEnabled, intensity: lights.spotIntensity, color: lights.spotColor, posX: lights.spotPosX, posY: lights.spotPosY, posZ: lights.spotPosZ, angle: lights.spotAngle, penumbra: lights.spotPenumbra };
+  const [dof] = useControls(
+    "Depth of Field",
+    () => ({
+      enabled: D_DOF.enabled,
+      focalLength: {
+        value: D_DOF.focalLength,
+        min: 0.001,
+        max: 0.1,
+        step: 0.001,
+      },
+      bokehScale: { value: D_DOF.bokehScale, min: 0, max: 10, step: 0.1 },
+    }),
+    { collapsed: true },
+  );
 
-  const env = useControls("Environment", {
-    preset: { options: ENV_PRESETS, value: D_ENV.preset },
-    showBackground: D_ENV.showBackground,
-    backgroundBlur: { value: D_ENV.backgroundBlur, min: 0, max: 1, step: 0.01 },
-    envIntensity: { value: D_ENV.envIntensity, min: 0, max: 5, step: 0.05 },
-  });
+  const [lights, setLights] = useControls(
+    "Lights",
+    () => ({
+      "Ambient Light": folder(
+        {
+          ambientIntensity: {
+            value: D_AMBIENT.intensity,
+            min: 0,
+            max: 5,
+            step: 0.05,
+          },
+          ambientColor: D_AMBIENT.color,
+        },
+        { collapsed: true },
+      ),
+      "Directional Light 1": folder(
+        {
+          dir1Enabled: D_DIR1.enabled,
+          dir1Intensity: {
+            value: D_DIR1.intensity,
+            min: 0,
+            max: 20,
+            step: 0.1,
+          },
+          dir1Color: D_DIR1.color,
+          dir1PosX: D_DIR1.posX,
+          dir1PosY: D_DIR1.posY,
+          dir1PosZ: D_DIR1.posZ,
+          dir1CastShadow: D_DIR1.castShadow,
+        },
+        { collapsed: true },
+      ),
+      "Directional Light 2": folder(
+        {
+          dir2Enabled: D_DIR2.enabled,
+          dir2Intensity: {
+            value: D_DIR2.intensity,
+            min: 0,
+            max: 20,
+            step: 0.1,
+          },
+          dir2Color: D_DIR2.color,
+          dir2PosX: D_DIR2.posX,
+          dir2PosY: D_DIR2.posY,
+          dir2PosZ: D_DIR2.posZ,
+          dir2CastShadow: D_DIR2.castShadow,
+        },
+        { collapsed: true },
+      ),
+      "Point Light": folder(
+        {
+          pointEnabled: D_POINT.enabled,
+          pointIntensity: {
+            value: D_POINT.intensity,
+            min: 0,
+            max: 20,
+            step: 0.1,
+          },
+          pointColor: D_POINT.color,
+          pointPosX: D_POINT.posX,
+          pointPosY: D_POINT.posY,
+          pointPosZ: D_POINT.posZ,
+          pointDistance: {
+            value: D_POINT.distance,
+            min: 0,
+            max: 50,
+            step: 0.5,
+          },
+          pointDecay: { value: D_POINT.decay, min: 0, max: 5, step: 0.05 },
+        },
+        { collapsed: true },
+      ),
+      "Spot Light": folder(
+        {
+          spotEnabled: D_SPOT.enabled,
+          spotIntensity: {
+            value: D_SPOT.intensity,
+            min: 0,
+            max: 50,
+            step: 0.5,
+          },
+          spotColor: D_SPOT.color,
+          spotPosX: D_SPOT.posX,
+          spotPosY: D_SPOT.posY,
+          spotPosZ: D_SPOT.posZ,
+          spotAngle: {
+            value: D_SPOT.angle,
+            min: 0,
+            max: Math.PI / 2,
+            step: 0.01,
+          },
+          spotPenumbra: { value: D_SPOT.penumbra, min: 0, max: 1, step: 0.01 },
+        },
+        { collapsed: true },
+      ),
+    }),
+    { collapsed: true },
+  );
 
-  const renderConfig = useControls("Render", {
-    toneMapping: { options: TONE_MAPS, value: D_RENDER.toneMapping },
-    toneMappingExposure: { value: D_RENDER.toneMappingExposure, min: 0, max: 5, step: 0.05 },
-    useEnvBackground: D_RENDER.useEnvBackground,
-    backgroundColor: D_RENDER.backgroundColor,
-    shadowsEnabled: D_RENDER.shadowsEnabled,
-    fogEnabled: D_RENDER.fogEnabled,
-    fogColor: D_RENDER.fogColor,
-    fogNear: { value: D_RENDER.fogNear, min: 0, max: 50, step: 0.5 },
-    fogFar: { value: D_RENDER.fogFar, min: 0, max: 200, step: 1 },
-    wireframe: D_RENDER.wireframe,
-  });
+  const ambient: AmbientLight = {
+    intensity: lights.ambientIntensity,
+    color: lights.ambientColor,
+  };
+  const dir1: DirectionalLight = {
+    enabled: lights.dir1Enabled,
+    intensity: lights.dir1Intensity,
+    color: lights.dir1Color,
+    posX: lights.dir1PosX,
+    posY: lights.dir1PosY,
+    posZ: lights.dir1PosZ,
+    castShadow: lights.dir1CastShadow,
+  };
+  const dir2: DirectionalLight = {
+    enabled: lights.dir2Enabled,
+    intensity: lights.dir2Intensity,
+    color: lights.dir2Color,
+    posX: lights.dir2PosX,
+    posY: lights.dir2PosY,
+    posZ: lights.dir2PosZ,
+    castShadow: lights.dir2CastShadow,
+  };
+  const point: PointLight = {
+    enabled: lights.pointEnabled,
+    intensity: lights.pointIntensity,
+    color: lights.pointColor,
+    posX: lights.pointPosX,
+    posY: lights.pointPosY,
+    posZ: lights.pointPosZ,
+    distance: lights.pointDistance,
+    decay: lights.pointDecay,
+  };
+  const spot: SpotLight = {
+    enabled: lights.spotEnabled,
+    intensity: lights.spotIntensity,
+    color: lights.spotColor,
+    posX: lights.spotPosX,
+    posY: lights.spotPosY,
+    posZ: lights.spotPosZ,
+    angle: lights.spotAngle,
+    penumbra: lights.spotPenumbra,
+  };
 
-  const material = useControls("Material Override", {
-    enabled: D_MATERIAL.enabled,
-    color: D_MATERIAL.color,
-    roughness: { value: D_MATERIAL.roughness, min: 0, max: 1, step: 0.01 },
-    metalness: { value: D_MATERIAL.metalness, min: 0, max: 1, step: 0.01 },
-    opacity: { value: D_MATERIAL.opacity, min: 0, max: 1, step: 0.01 },
-    transparent: D_MATERIAL.transparent,
-  });
+  const [env] = useControls(
+    "Environment",
+    () => ({
+      preset: { options: ENV_PRESETS, value: D_ENV.preset },
+      showBackground: D_ENV.showBackground,
+      backgroundBlur: {
+        value: D_ENV.backgroundBlur,
+        min: 0,
+        max: 1,
+        step: 0.01,
+      },
+      envIntensity: { value: D_ENV.envIntensity, min: 0, max: 5, step: 0.05 },
+    }),
+    { collapsed: true },
+  );
+
+  const [renderConfig] = useControls(
+    "Render",
+    () => ({
+      toneMapping: { options: TONE_MAPS, value: D_RENDER.toneMapping },
+      toneMappingExposure: {
+        value: D_RENDER.toneMappingExposure,
+        min: 0,
+        max: 5,
+        step: 0.05,
+      },
+      useEnvBackground: D_RENDER.useEnvBackground,
+      backgroundColor: D_RENDER.backgroundColor,
+      shadowsEnabled: D_RENDER.shadowsEnabled,
+      fogEnabled: D_RENDER.fogEnabled,
+      fogColor: D_RENDER.fogColor,
+      fogNear: { value: D_RENDER.fogNear, min: 0, max: 50, step: 0.5 },
+      fogFar: { value: D_RENDER.fogFar, min: 0, max: 200, step: 1 },
+      wireframe: D_RENDER.wireframe,
+    }),
+    { collapsed: true },
+  );
+
+  const [material] = useControls(
+    "Material Override",
+    () => ({
+      enabled: D_MATERIAL.enabled,
+      color: D_MATERIAL.color,
+      roughness: { value: D_MATERIAL.roughness, min: 0, max: 1, step: 0.01 },
+      metalness: { value: D_MATERIAL.metalness, min: 0, max: 1, step: 0.01 },
+      opacity: { value: D_MATERIAL.opacity, min: 0, max: 1, step: 0.01 },
+      transparent: D_MATERIAL.transparent,
+    }),
+    { collapsed: true },
+  );
 
   return (
     <div className="fixed inset-0 flex bg-zinc-950 overflow-hidden">
@@ -317,6 +494,7 @@ export default function ModelViewerSettings() {
               point={point}
               spot={spot}
               renderConfig={renderConfig}
+              setLights={setLights}
             />
             <Suspense fallback={null}>
               {activeModelUrl && (
@@ -360,6 +538,32 @@ export default function ModelViewerSettings() {
                 autoRotateSpeed={camera.autoRotateOrbitSpeed}
                 dampingFactor={camera.dampingFactor}
                 enableDamping
+                onChange={(e) => {
+                  if (!e) return;
+                  const target = e.target;
+                  if (target.object) {
+                    const pos = target.object.position;
+                    const tgt = target.target;
+
+                    if (
+                      Math.abs(camera.posX - pos.x) > 0.01 ||
+                      Math.abs(camera.posY - pos.y) > 0.01 ||
+                      Math.abs(camera.posZ - pos.z) > 0.01 ||
+                      Math.abs(camera.targetX - tgt.x) > 0.01 ||
+                      Math.abs(camera.targetY - tgt.y) > 0.01 ||
+                      Math.abs(camera.targetZ - tgt.z) > 0.01
+                    ) {
+                      setCamera({
+                        posX: pos.x,
+                        posY: pos.y,
+                        posZ: pos.z,
+                        targetX: tgt.x,
+                        targetY: tgt.y,
+                        targetZ: tgt.z,
+                      });
+                    }
+                  }
+                }}
               />
             )}
           </Canvas>

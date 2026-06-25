@@ -120,7 +120,9 @@ export function ModelUploaderSection({
             <SubLabel>Available Models</SubLabel>
             <div className="flex flex-col gap-1 max-h-40 overflow-y-auto pr-1">
               {models.length === 0 && (
-                <span className="text-[11px] text-zinc-500">No models found in public/models</span>
+                <span className="text-[11px] text-zinc-500">
+                  No models found in public/models
+                </span>
               )}
               {models.map((m) => {
                 const modelUrl = `/models/${m}`;
@@ -129,11 +131,13 @@ export function ModelUploaderSection({
                   <button
                     key={m}
                     onClick={() => onSelectModel(modelUrl)}
-                    className={`text-left text-[11px] px-2 py-1.5 rounded-md transition-colors cursor-pointer truncate ${
-                      isActive
-                        ? "bg-amber-500/20 text-amber-400"
-                        : "text-zinc-400 hover:bg-zinc-800"
-                    }`}
+                    className={`text-left text-[11px] px-2 py-1.5 rounded-md transition-colors cursor-pointer truncate
+                      ${
+                        isActive
+                          ? "bg-amber-500/20 text-amber-400"
+                          : "text-zinc-400 hover:bg-zinc-800"
+                      }
+                    `}
                     title={m}
                   >
                     {m}
@@ -142,9 +146,9 @@ export function ModelUploaderSection({
               })}
             </div>
           </div>
-          
+
           <Divider />
-          
+
           <div>
             <SubLabel>Upload New Model</SubLabel>
             <label className="mt-1 flex items-center justify-center w-full px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-amber-500 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-500/50 rounded-full transition-all cursor-pointer text-center">
