@@ -157,9 +157,160 @@ export default function ModelViewerSettings() {
 
   const orbitRef = useRef<OrbitControlsImpl>(null);
 
-  const [transform] = useControls(
+  const setters = useRef<any>({});
+
+  useControls({
+    "Reset All": button(() => {
+      if (setters.current.setTransform) {
+        setters.current.setTransform({
+          posX: D_TRANSFORM.posX,
+          posY: D_TRANSFORM.posY,
+          posZ: D_TRANSFORM.posZ,
+          rotX: D_TRANSFORM.rotX,
+          rotY: D_TRANSFORM.rotY,
+          rotZ: D_TRANSFORM.rotZ,
+          scale: D_TRANSFORM.scale,
+          autoRotateEnabled: D_AUTO_ROTATE.enabled,
+          autoRotateSpeed: D_AUTO_ROTATE.speed,
+          autoRotateAxis: D_AUTO_ROTATE.axis,
+        });
+      }
+      if (setters.current.setCamera) {
+        setters.current.setCamera({
+          fov: D_CAMERA.fov,
+          near: D_CAMERA.near,
+          far: D_CAMERA.far,
+          orbitEnabled: D_CAMERA.orbitEnabled,
+          enablePan: D_CAMERA.enablePan,
+          enableZoom: D_CAMERA.enableZoom,
+          autoRotateOrbit: D_CAMERA.autoRotateOrbit,
+          autoRotateOrbitSpeed: D_CAMERA.autoRotateOrbitSpeed,
+          dampingFactor: D_CAMERA.dampingFactor,
+          minDistance: D_CAMERA.minDistance,
+          maxDistance: D_CAMERA.maxDistance,
+          minPolarAngle: D_CAMERA.minPolarAngle,
+          maxPolarAngle: D_CAMERA.maxPolarAngle,
+          posX: D_CAMERA.posX,
+          posY: D_CAMERA.posY,
+          posZ: D_CAMERA.posZ,
+          targetX: D_CAMERA.targetX,
+          targetY: D_CAMERA.targetY,
+          targetZ: D_CAMERA.targetZ,
+        });
+      }
+      if (setters.current.setDof) {
+        setters.current.setDof({
+          enabled: D_DOF.enabled,
+          focalLength: D_DOF.focalLength,
+          bokehScale: D_DOF.bokehScale,
+        });
+      }
+      if (setters.current.setLights) {
+        setters.current.setLights({
+          ambientIntensity: D_AMBIENT.intensity,
+          ambientColor: D_AMBIENT.color,
+          dir1Enabled: D_DIR1.enabled,
+          dir1ShowHelper: D_DIR1.showHelper,
+          dir1Intensity: D_DIR1.intensity,
+          dir1Color: D_DIR1.color,
+          dir1PosX: D_DIR1.posX,
+          dir1PosY: D_DIR1.posY,
+          dir1PosZ: D_DIR1.posZ,
+          dir1CastShadow: D_DIR1.castShadow,
+          dir2Enabled: D_DIR2.enabled,
+          dir2ShowHelper: D_DIR2.showHelper,
+          dir2Intensity: D_DIR2.intensity,
+          dir2Color: D_DIR2.color,
+          dir2PosX: D_DIR2.posX,
+          dir2PosY: D_DIR2.posY,
+          dir2PosZ: D_DIR2.posZ,
+          dir2CastShadow: D_DIR2.castShadow,
+          pointEnabled: D_POINT.enabled,
+          pointShowHelper: D_POINT.showHelper,
+          pointIntensity: D_POINT.intensity,
+          pointColor: D_POINT.color,
+          pointPosX: D_POINT.posX,
+          pointPosY: D_POINT.posY,
+          pointPosZ: D_POINT.posZ,
+          pointDistance: D_POINT.distance,
+          pointDecay: D_POINT.decay,
+          spotEnabled: D_SPOT.enabled,
+          spotShowHelper: D_SPOT.showHelper,
+          spotIntensity: D_SPOT.intensity,
+          spotColor: D_SPOT.color,
+          spotPosX: D_SPOT.posX,
+          spotPosY: D_SPOT.posY,
+          spotPosZ: D_SPOT.posZ,
+          spotAngle: D_SPOT.angle,
+          spotPenumbra: D_SPOT.penumbra,
+        });
+      }
+      if (setters.current.setEnv) {
+        setters.current.setEnv({
+          preset: D_ENV.preset,
+          showBackground: D_ENV.showBackground,
+          backgroundBlur: D_ENV.backgroundBlur,
+          envIntensity: D_ENV.envIntensity,
+        });
+      }
+      if (setters.current.setRenderConfig) {
+        setters.current.setRenderConfig({
+          toneMapping: D_RENDER.toneMapping,
+          toneMappingExposure: D_RENDER.toneMappingExposure,
+          useEnvBackground: D_RENDER.useEnvBackground,
+          backgroundColor: D_RENDER.backgroundColor,
+          shadowsEnabled: D_RENDER.shadowsEnabled,
+          fogEnabled: D_RENDER.fogEnabled,
+          fogColor: D_RENDER.fogColor,
+          fogNear: D_RENDER.fogNear,
+          fogFar: D_RENDER.fogFar,
+          wireframe: D_RENDER.wireframe,
+        });
+      }
+      if (setters.current.setMaterial) {
+        setters.current.setMaterial({
+          enabled: D_MATERIAL.enabled,
+          color: D_MATERIAL.color,
+          roughness: D_MATERIAL.roughness,
+          metalness: D_MATERIAL.metalness,
+          opacity: D_MATERIAL.opacity,
+          transparent: D_MATERIAL.transparent,
+        });
+      }
+      if (setters.current.setHelpers) {
+        setters.current.setHelpers({
+          gridEnabled: D_HELPERS.grid.enabled,
+          gridSize: D_HELPERS.grid.size,
+          gridDivisions: D_HELPERS.grid.divisions,
+          gridColor1: D_HELPERS.grid.color1,
+          gridColor2: D_HELPERS.grid.color2,
+          axesEnabled: D_HELPERS.axes.enabled,
+          axesSize: D_HELPERS.axes.size,
+          gizmoEnabled: D_HELPERS.gizmo.enabled,
+          gizmoAlignment: D_HELPERS.gizmo.alignment,
+          gizmoType: D_HELPERS.gizmo.type,
+        });
+      }
+    }),
+  });
+
+  const [transform, setTransform] = useControls(
     "Transform",
     () => ({
+      Reset: button(() => {
+        setTransform({
+          posX: D_TRANSFORM.posX,
+          posY: D_TRANSFORM.posY,
+          posZ: D_TRANSFORM.posZ,
+          rotX: D_TRANSFORM.rotX,
+          rotY: D_TRANSFORM.rotY,
+          rotZ: D_TRANSFORM.rotZ,
+          scale: D_TRANSFORM.scale,
+          autoRotateEnabled: D_AUTO_ROTATE.enabled,
+          autoRotateSpeed: D_AUTO_ROTATE.speed,
+          autoRotateAxis: D_AUTO_ROTATE.axis,
+        });
+      }),
       posX: { value: D_TRANSFORM.posX, step: 0.01 },
       posY: { value: D_TRANSFORM.posY, step: 0.01 },
       posZ: { value: D_TRANSFORM.posZ, step: 0.01 },
@@ -187,6 +338,8 @@ export default function ModelViewerSettings() {
     { collapsed: true },
   );
 
+  setters.current.setTransform = setTransform;
+
   const autoRotate = {
     enabled: transform.autoRotateEnabled,
     speed: transform.autoRotateSpeed,
@@ -196,6 +349,29 @@ export default function ModelViewerSettings() {
   const [camera, setCamera] = useControls(
     "Camera",
     () => ({
+      Reset: button(() => {
+        setCamera({
+          fov: D_CAMERA.fov,
+          near: D_CAMERA.near,
+          far: D_CAMERA.far,
+          orbitEnabled: D_CAMERA.orbitEnabled,
+          enablePan: D_CAMERA.enablePan,
+          enableZoom: D_CAMERA.enableZoom,
+          autoRotateOrbit: D_CAMERA.autoRotateOrbit,
+          autoRotateOrbitSpeed: D_CAMERA.autoRotateOrbitSpeed,
+          dampingFactor: D_CAMERA.dampingFactor,
+          minDistance: D_CAMERA.minDistance,
+          maxDistance: D_CAMERA.maxDistance,
+          minPolarAngle: D_CAMERA.minPolarAngle,
+          maxPolarAngle: D_CAMERA.maxPolarAngle,
+          posX: D_CAMERA.posX,
+          posY: D_CAMERA.posY,
+          posZ: D_CAMERA.posZ,
+          targetX: D_CAMERA.targetX,
+          targetY: D_CAMERA.targetY,
+          targetZ: D_CAMERA.targetZ,
+        });
+      }),
       fov: { value: D_CAMERA.fov, min: 1, max: 120, step: 1 },
       near: { value: D_CAMERA.near, min: 0.0001, step: 0.001 },
       far: { value: D_CAMERA.far, min: 1, step: 10 },
@@ -243,10 +419,18 @@ export default function ModelViewerSettings() {
     }),
     { collapsed: true },
   );
+  setters.current.setCamera = setCamera;
 
-  const [dof] = useControls(
+  const [dof, setDof] = useControls(
     "Depth of Field",
     () => ({
+      Reset: button(() => {
+        setDof({
+          enabled: D_DOF.enabled,
+          focalLength: D_DOF.focalLength,
+          bokehScale: D_DOF.bokehScale,
+        });
+      }),
       enabled: D_DOF.enabled,
       focalLength: {
         value: D_DOF.focalLength,
@@ -259,10 +443,51 @@ export default function ModelViewerSettings() {
     }),
     { collapsed: true },
   );
+  setters.current.setDof = setDof;
 
   const [lights, setLights] = useControls(
     "Lights",
     () => ({
+      Reset: button(() => {
+        setLights({
+          ambientIntensity: D_AMBIENT.intensity,
+          ambientColor: D_AMBIENT.color,
+          dir1Enabled: D_DIR1.enabled,
+          dir1ShowHelper: D_DIR1.showHelper,
+          dir1Intensity: D_DIR1.intensity,
+          dir1Color: D_DIR1.color,
+          dir1PosX: D_DIR1.posX,
+          dir1PosY: D_DIR1.posY,
+          dir1PosZ: D_DIR1.posZ,
+          dir1CastShadow: D_DIR1.castShadow,
+          dir2Enabled: D_DIR2.enabled,
+          dir2ShowHelper: D_DIR2.showHelper,
+          dir2Intensity: D_DIR2.intensity,
+          dir2Color: D_DIR2.color,
+          dir2PosX: D_DIR2.posX,
+          dir2PosY: D_DIR2.posY,
+          dir2PosZ: D_DIR2.posZ,
+          dir2CastShadow: D_DIR2.castShadow,
+          pointEnabled: D_POINT.enabled,
+          pointShowHelper: D_POINT.showHelper,
+          pointIntensity: D_POINT.intensity,
+          pointColor: D_POINT.color,
+          pointPosX: D_POINT.posX,
+          pointPosY: D_POINT.posY,
+          pointPosZ: D_POINT.posZ,
+          pointDistance: D_POINT.distance,
+          pointDecay: D_POINT.decay,
+          spotEnabled: D_SPOT.enabled,
+          spotShowHelper: D_SPOT.showHelper,
+          spotIntensity: D_SPOT.intensity,
+          spotColor: D_SPOT.color,
+          spotPosX: D_SPOT.posX,
+          spotPosY: D_SPOT.posY,
+          spotPosZ: D_SPOT.posZ,
+          spotAngle: D_SPOT.angle,
+          spotPenumbra: D_SPOT.penumbra,
+        });
+      }),
       "Ambient Light": folder(
         {
           ambientIntensity: {
@@ -362,6 +587,7 @@ export default function ModelViewerSettings() {
     }),
     { collapsed: true },
   );
+  setters.current.setLights = setLights;
 
   const ambient: AmbientLight = {
     intensity: lights.ambientIntensity,
@@ -410,9 +636,17 @@ export default function ModelViewerSettings() {
     penumbra: lights.spotPenumbra,
   };
 
-  const [env] = useControls(
+  const [env, setEnv] = useControls(
     "Environment",
     () => ({
+      Reset: button(() => {
+        setEnv({
+          preset: D_ENV.preset,
+          showBackground: D_ENV.showBackground,
+          backgroundBlur: D_ENV.backgroundBlur,
+          envIntensity: D_ENV.envIntensity,
+        });
+      }),
       preset: { options: ENV_PRESETS, value: D_ENV.preset },
       showBackground: D_ENV.showBackground,
       backgroundBlur: {
@@ -425,10 +659,25 @@ export default function ModelViewerSettings() {
     }),
     { collapsed: true },
   );
+  setters.current.setEnv = setEnv;
 
-  const [renderConfig] = useControls(
+  const [renderConfig, setRenderConfig] = useControls(
     "Render",
     () => ({
+      Reset: button(() => {
+        setRenderConfig({
+          toneMapping: D_RENDER.toneMapping,
+          toneMappingExposure: D_RENDER.toneMappingExposure,
+          useEnvBackground: D_RENDER.useEnvBackground,
+          backgroundColor: D_RENDER.backgroundColor,
+          shadowsEnabled: D_RENDER.shadowsEnabled,
+          fogEnabled: D_RENDER.fogEnabled,
+          fogColor: D_RENDER.fogColor,
+          fogNear: D_RENDER.fogNear,
+          fogFar: D_RENDER.fogFar,
+          wireframe: D_RENDER.wireframe,
+        });
+      }),
       toneMapping: { options: TONE_MAPS, value: D_RENDER.toneMapping },
       toneMappingExposure: {
         value: D_RENDER.toneMappingExposure,
@@ -447,10 +696,21 @@ export default function ModelViewerSettings() {
     }),
     { collapsed: true },
   );
+  setters.current.setRenderConfig = setRenderConfig;
 
-  const [material] = useControls(
+  const [material, setMaterial] = useControls(
     "Material Override",
     () => ({
+      Reset: button(() => {
+        setMaterial({
+          enabled: D_MATERIAL.enabled,
+          color: D_MATERIAL.color,
+          roughness: D_MATERIAL.roughness,
+          metalness: D_MATERIAL.metalness,
+          opacity: D_MATERIAL.opacity,
+          transparent: D_MATERIAL.transparent,
+        });
+      }),
       enabled: D_MATERIAL.enabled,
       color: D_MATERIAL.color,
       roughness: { value: D_MATERIAL.roughness, min: 0, max: 1, step: 0.01 },
@@ -460,10 +720,25 @@ export default function ModelViewerSettings() {
     }),
     { collapsed: true },
   );
+  setters.current.setMaterial = setMaterial;
 
-  const [helpers] = useControls(
+  const [helpers, setHelpers] = useControls(
     "Helpers",
     () => ({
+      Reset: button(() => {
+        setHelpers({
+          gridEnabled: D_HELPERS.grid.enabled,
+          gridSize: D_HELPERS.grid.size,
+          gridDivisions: D_HELPERS.grid.divisions,
+          gridColor1: D_HELPERS.grid.color1,
+          gridColor2: D_HELPERS.grid.color2,
+          axesEnabled: D_HELPERS.axes.enabled,
+          axesSize: D_HELPERS.axes.size,
+          gizmoEnabled: D_HELPERS.gizmo.enabled,
+          gizmoAlignment: D_HELPERS.gizmo.alignment,
+          gizmoType: D_HELPERS.gizmo.type,
+        });
+      }),
       "Grid Helper": folder(
         {
           gridEnabled: D_HELPERS.grid.enabled,
@@ -520,6 +795,7 @@ export default function ModelViewerSettings() {
     }),
     { collapsed: true },
   );
+  setters.current.setHelpers = setHelpers;
 
   return (
     <div className="fixed inset-0 flex bg-zinc-950 overflow-hidden">
