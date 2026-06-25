@@ -55,8 +55,8 @@ function LoadingOverlay() {
   return (
     <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none transition-opacity duration-300">
       <div className="flex flex-col items-center justify-center gap-3 bg-zinc-950/80 px-6 py-4 rounded-xl backdrop-blur-md border border-zinc-800 shadow-2xl">
-        <div className="w-8 h-8 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-        <div className="text-amber-500 font-mono text-[11px] tracking-widest">
+        <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+        <div className="text-blue-500 font-mono text-[11px] tracking-widest">
           {progress.toFixed(0)}%
         </div>
       </div>
@@ -160,20 +160,20 @@ export default function ModelViewerSettings() {
   const [transform] = useControls(
     "Transform",
     () => ({
-      posX: { value: D_TRANSFORM.posX, min: -5, max: 5, step: 0.001 },
-      posY: { value: D_TRANSFORM.posY, min: -5, max: 5, step: 0.001 },
-      posZ: { value: D_TRANSFORM.posZ, min: -5, max: 5, step: 0.001 },
-      rotX: { value: D_TRANSFORM.rotX, min: -180, max: 180, step: 0.001 },
-      rotY: { value: D_TRANSFORM.rotY, min: -180, max: 180, step: 0.001 },
-      rotZ: { value: D_TRANSFORM.rotZ, min: -180, max: 180, step: 0.001 },
-      scale: { value: D_TRANSFORM.scale, min: 0.01, max: 10, step: 0.001 },
+      posX: { value: D_TRANSFORM.posX, step: 0.01 },
+      posY: { value: D_TRANSFORM.posY, step: 0.01 },
+      posZ: { value: D_TRANSFORM.posZ, step: 0.01 },
+      rotX: { value: D_TRANSFORM.rotX, step: 0.01 },
+      rotY: { value: D_TRANSFORM.rotY, step: 0.01 },
+      rotZ: { value: D_TRANSFORM.rotZ, step: 0.01 },
+      scale: { value: D_TRANSFORM.scale, step: 0.01 },
       "Auto Rotate": folder(
         {
           autoRotateEnabled: D_AUTO_ROTATE.enabled,
           autoRotateSpeed: {
             value: D_AUTO_ROTATE.speed,
             min: 0.1,
-            max: 10,
+            max: 20,
             step: 0.1,
           },
           autoRotateAxis: {
@@ -196,7 +196,7 @@ export default function ModelViewerSettings() {
   const [camera, setCamera] = useControls(
     "Camera",
     () => ({
-      fov: { value: D_CAMERA.fov, min: 10, max: 120, step: 1 },
+      fov: { value: D_CAMERA.fov, min: 1, max: 120, step: 1 },
       near: { value: D_CAMERA.near, min: 0.0001, step: 0.001 },
       far: { value: D_CAMERA.far, min: 1, step: 10 },
       orbitEnabled: D_CAMERA.orbitEnabled,
@@ -286,9 +286,9 @@ export default function ModelViewerSettings() {
             step: 0.1,
           },
           dir1Color: D_DIR1.color,
-          dir1PosX: D_DIR1.posX,
-          dir1PosY: D_DIR1.posY,
-          dir1PosZ: D_DIR1.posZ,
+          dir1PosX: { value: D_DIR1.posX, step: 0.001 },
+          dir1PosY: { value: D_DIR1.posY, step: 0.001 },
+          dir1PosZ: { value: D_DIR1.posZ, step: 0.001 },
           dir1CastShadow: D_DIR1.castShadow,
         },
         { collapsed: true },
@@ -304,9 +304,9 @@ export default function ModelViewerSettings() {
             step: 0.1,
           },
           dir2Color: D_DIR2.color,
-          dir2PosX: D_DIR2.posX,
-          dir2PosY: D_DIR2.posY,
-          dir2PosZ: D_DIR2.posZ,
+          dir2PosX: { value: D_DIR2.posX, step: 0.001 },
+          dir2PosY: { value: D_DIR2.posY, step: 0.001 },
+          dir2PosZ: { value: D_DIR2.posZ, step: 0.001 },
           dir2CastShadow: D_DIR2.castShadow,
         },
         { collapsed: true },
@@ -322,9 +322,9 @@ export default function ModelViewerSettings() {
             step: 0.1,
           },
           pointColor: D_POINT.color,
-          pointPosX: D_POINT.posX,
-          pointPosY: D_POINT.posY,
-          pointPosZ: D_POINT.posZ,
+          pointPosX: { value: D_POINT.posX, step: 0.001 },
+          pointPosY: { value: D_POINT.posY, step: 0.001 },
+          pointPosZ: { value: D_POINT.posZ, step: 0.001 },
           pointDistance: {
             value: D_POINT.distance,
             min: 0,
@@ -346,9 +346,9 @@ export default function ModelViewerSettings() {
             step: 0.5,
           },
           spotColor: D_SPOT.color,
-          spotPosX: D_SPOT.posX,
-          spotPosY: D_SPOT.posY,
-          spotPosZ: D_SPOT.posZ,
+          spotPosX: { value: D_SPOT.posX, step: 0.001 },
+          spotPosY: { value: D_SPOT.posY, step: 0.001 },
+          spotPosZ: { value: D_SPOT.posZ, step: 0.001 },
           spotAngle: {
             value: D_SPOT.angle,
             min: 0,
@@ -650,7 +650,7 @@ export default function ModelViewerSettings() {
         {/* Sidebar toggle */}
         <button
           onClick={() => setSidebarOpen((s) => !s)}
-          className="absolute top-4 right-4 z-20 flex items-center p-2 rounded-full bg-zinc-900/80 backdrop-blur border border-zinc-700 text-zinc-300 hover:text-amber-400 hover:border-amber-500/40 text-[11px] uppercase tracking-widest transition-colors duration-150 cursor-pointer"
+          className="absolute top-4 right-4 z-20 flex items-center p-2 rounded-full bg-zinc-900/80 backdrop-blur border border-zinc-700 text-zinc-300 hover:text-blue-400 hover:border-blue-500/40 text-[11px] uppercase tracking-widest transition-colors duration-150 cursor-pointer"
         >
           <svg
             className={`size-3.5 transition-transform duration-300 ${sidebarOpen ? "rotate-0" : "rotate-180"}`}

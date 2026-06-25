@@ -28,12 +28,12 @@ function SectionHeader({
   return (
     <button
       onClick={onToggle}
-      className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold tracking-widest uppercase text-amber-400/80 hover:text-amber-300 transition-colors cursor-pointer"
+      className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold tracking-widest uppercase text-blue-400/80 hover:text-blue-300 transition-colors cursor-pointer"
     >
       <span className="flex items-center gap-2">
         {label}
         {badge && (
-          <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full tracking-normal normal-case font-normal">
+          <span className="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full tracking-normal normal-case font-normal">
             {badge}
           </span>
         )}
@@ -134,7 +134,7 @@ export function ModelUploaderSection({
                     className={`text-left text-[11px] px-2 py-1.5 rounded-md transition-colors cursor-pointer truncate
                       ${
                         isActive
-                          ? "bg-amber-500/20 text-amber-400"
+                          ? "bg-blue-500/20 text-blue-400"
                           : "text-zinc-400 hover:bg-zinc-800"
                       }
                     `}
@@ -151,7 +151,7 @@ export function ModelUploaderSection({
 
           <div>
             <SubLabel>Upload New Model</SubLabel>
-            <label className="mt-1 flex items-center justify-center w-full px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-amber-500 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-500/50 rounded-full transition-all cursor-pointer text-center">
+            <label className="mt-1 flex items-center justify-center w-full px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-blue-500 bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20 hover:border-blue-500/50 rounded-full transition-all cursor-pointer text-center">
               {isUploading ? "Uploading..." : "Select .glb / .gltf"}
               <input
                 type="file"
