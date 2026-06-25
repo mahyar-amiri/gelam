@@ -27,6 +27,7 @@ export interface DirectionalLight {
   posY: number;
   posZ: number;
   castShadow: boolean;
+  showHelper: boolean;
 }
 
 export interface PointLight {
@@ -38,6 +39,7 @@ export interface PointLight {
   posZ: number;
   distance: number;
   decay: number;
+  showHelper: boolean;
 }
 
 export interface SpotLight {
@@ -49,6 +51,7 @@ export interface SpotLight {
   posZ: number;
   angle: number;
   penumbra: number;
+  showHelper: boolean;
 }
 
 export interface EnvConfig {
@@ -117,4 +120,30 @@ export interface LightConfig {
   dirColor: string;
   envPreset: string;
   showEnv: boolean;
+}
+
+export interface GridHelperConfig {
+  enabled: boolean;
+  size: number;
+  divisions: number;
+  color1: string;
+  color2: string;
+}
+
+export interface AxesHelperConfig {
+  enabled: boolean;
+  size: number;
+}
+
+export interface GizmoHelperConfig {
+  enabled: boolean;
+  alignment: string;
+  margin: [number, number];
+  type: "viewport" | "viewcube";
+}
+
+export interface HelpersConfig {
+  grid: GridHelperConfig;
+  axes: AxesHelperConfig;
+  gizmo: GizmoHelperConfig;
 }

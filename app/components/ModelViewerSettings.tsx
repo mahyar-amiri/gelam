@@ -11,12 +11,13 @@ import {
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { EffectComposer, DepthOfField } from "@react-three/postprocessing";
 import * as THREE from "three";
-import { useControls, folder, Leva } from "leva";
-
+import { useControls, folder, button, Leva } from "leva";
+import { ModelUploaderSection } from "@/components/Controller";
 import {
   CameraController,
   RenderSettings,
   SceneLights,
+  SceneHelpers,
 } from "@/utils/controller";
 import {
   Transform,
@@ -43,8 +44,8 @@ import {
   D_MATERIAL,
   ENV_PRESETS,
   TONE_MAPS,
+  D_HELPERS,
 } from "@/consts/controller";
-import { ModelUploaderSection } from "@/components/Controller";
 
 function LoadingOverlay() {
   const { active, progress } = useProgress();
@@ -139,8 +140,10 @@ export default function ModelViewerSettings() {
 
   useEffect(() => {
     const saved = localStorage.getItem("activeModelUrl");
-    if (saved) setActiveModelUrl(saved);
-  }, []);
+    if (saved && saved !== activeModelUrl) {
+      setActiveModelUrl(saved);
+    }
+  }, [activeModelUrl]);
 
   useEffect(() => {
     if (activeModelUrl) {
@@ -157,13 +160,13 @@ export default function ModelViewerSettings() {
   const [transform] = useControls(
     "Transform",
     () => ({
-      posX: { value: D_TRANSFORM.posX, min: -5, max: 5, step: 0.01 },
-      posY: { value: D_TRANSFORM.posY, min: -5, max: 5, step: 0.01 },
-      posZ: { value: D_TRANSFORM.posZ, min: -5, max: 5, step: 0.01 },
-      rotX: { value: D_TRANSFORM.rotX, min: -180, max: 180, step: 1 },
-      rotY: { value: D_TRANSFORM.rotY, min: -180, max: 180, step: 1 },
-      rotZ: { value: D_TRANSFORM.rotZ, min: -180, max: 180, step: 1 },
-      scale: { value: D_TRANSFORM.scale, min: 0.01, max: 10, step: 0.01 },
+      posX: { value: D_TRANSFORM.posX, min: -5, max: 5, step: 0.001 },
+      posY: { value: D_TRANSFORM.posY, min: -5, max: 5, step: 0.001 },
+      posZ: { value: D_TRANSFORM.posZ, min: -5, max: 5, step: 0.001 },
+      rotX: { value: D_TRANSFORM.rotX, min: -180, max: 180, step: 0.001 },
+      rotY: { value: D_TRANSFORM.rotY, min: -180, max: 180, step: 0.001 },
+      rotZ: { value: D_TRANSFORM.rotZ, min: -180, max: 180, step: 0.001 },
+      scale: { value: D_TRANSFORM.scale, min: 0.01, max: 10, step: 0.001 },
       "Auto Rotate": folder(
         {
           autoRotateEnabled: D_AUTO_ROTATE.enabled,
@@ -202,7 +205,7 @@ export default function ModelViewerSettings() {
       autoRotateOrbit: D_CAMERA.autoRotateOrbit,
       autoRotateOrbitSpeed: {
         value: D_CAMERA.autoRotateOrbitSpeed,
-        min: -20,
+        min: 0.5,
         max: 20,
         step: 0.5,
       },
@@ -218,25 +221,25 @@ export default function ModelViewerSettings() {
         max: 10,
         step: 0.001,
       },
-      maxDistance: { value: D_CAMERA.maxDistance, min: 1, max: 500, step: 1 },
+      maxDistance: { value: D_CAMERA.maxDistance, min: 1, max: 200, step: 0.1 },
       minPolarAngle: {
         value: D_CAMERA.minPolarAngle,
         min: 0,
         max: 180,
-        step: 1,
+        step: 0.1,
       },
       maxPolarAngle: {
         value: D_CAMERA.maxPolarAngle,
         min: 0,
         max: 180,
-        step: 1,
+        step: 0.1,
       },
-      posX: { value: D_CAMERA.posX, min: -20, max: 20 },
-      posY: { value: D_CAMERA.posY, min: -20, max: 20 },
-      posZ: { value: D_CAMERA.posZ, min: -20, max: 20 },
-      targetX: { value: D_CAMERA.targetX, min: -10, max: 10 },
-      targetY: { value: D_CAMERA.targetY, min: -10, max: 10 },
-      targetZ: { value: D_CAMERA.targetZ, min: -10, max: 10 },
+      posX: { value: D_CAMERA.posX, min: -20, max: 20, step: 0.001 },
+      posY: { value: D_CAMERA.posY, min: -20, max: 20, step: 0.001 },
+      posZ: { value: D_CAMERA.posZ, min: -20, max: 20, step: 0.001 },
+      targetX: { value: D_CAMERA.targetX, min: -10, max: 10, step: 0.001 },
+      targetY: { value: D_CAMERA.targetY, min: -10, max: 10, step: 0.001 },
+      targetZ: { value: D_CAMERA.targetZ, min: -10, max: 10, step: 0.001 },
     }),
     { collapsed: true },
   );
@@ -252,6 +255,7 @@ export default function ModelViewerSettings() {
         step: 0.001,
       },
       bokehScale: { value: D_DOF.bokehScale, min: 0, max: 10, step: 0.1 },
+      clearTarget: button(() => setFocusTarget(null)),
     }),
     { collapsed: true },
   );
@@ -274,6 +278,7 @@ export default function ModelViewerSettings() {
       "Directional Light 1": folder(
         {
           dir1Enabled: D_DIR1.enabled,
+          dir1ShowHelper: D_DIR1.showHelper,
           dir1Intensity: {
             value: D_DIR1.intensity,
             min: 0,
@@ -291,6 +296,7 @@ export default function ModelViewerSettings() {
       "Directional Light 2": folder(
         {
           dir2Enabled: D_DIR2.enabled,
+          dir2ShowHelper: D_DIR2.showHelper,
           dir2Intensity: {
             value: D_DIR2.intensity,
             min: 0,
@@ -308,6 +314,7 @@ export default function ModelViewerSettings() {
       "Point Light": folder(
         {
           pointEnabled: D_POINT.enabled,
+          pointShowHelper: D_POINT.showHelper,
           pointIntensity: {
             value: D_POINT.intensity,
             min: 0,
@@ -331,6 +338,7 @@ export default function ModelViewerSettings() {
       "Spot Light": folder(
         {
           spotEnabled: D_SPOT.enabled,
+          spotShowHelper: D_SPOT.showHelper,
           spotIntensity: {
             value: D_SPOT.intensity,
             min: 0,
@@ -361,6 +369,7 @@ export default function ModelViewerSettings() {
   };
   const dir1: DirectionalLight = {
     enabled: lights.dir1Enabled,
+    showHelper: lights.dir1ShowHelper,
     intensity: lights.dir1Intensity,
     color: lights.dir1Color,
     posX: lights.dir1PosX,
@@ -370,6 +379,7 @@ export default function ModelViewerSettings() {
   };
   const dir2: DirectionalLight = {
     enabled: lights.dir2Enabled,
+    showHelper: lights.dir2ShowHelper,
     intensity: lights.dir2Intensity,
     color: lights.dir2Color,
     posX: lights.dir2PosX,
@@ -379,6 +389,7 @@ export default function ModelViewerSettings() {
   };
   const point: PointLight = {
     enabled: lights.pointEnabled,
+    showHelper: lights.pointShowHelper,
     intensity: lights.pointIntensity,
     color: lights.pointColor,
     posX: lights.pointPosX,
@@ -389,6 +400,7 @@ export default function ModelViewerSettings() {
   };
   const spot: SpotLight = {
     enabled: lights.spotEnabled,
+    showHelper: lights.spotShowHelper,
     intensity: lights.spotIntensity,
     color: lights.spotColor,
     posX: lights.spotPosX,
@@ -430,7 +442,7 @@ export default function ModelViewerSettings() {
       fogEnabled: D_RENDER.fogEnabled,
       fogColor: D_RENDER.fogColor,
       fogNear: { value: D_RENDER.fogNear, min: 0, max: 50, step: 0.5 },
-      fogFar: { value: D_RENDER.fogFar, min: 0, max: 200, step: 1 },
+      fogFar: { value: D_RENDER.fogFar, min: 0, max: 200, step: 0.5 },
       wireframe: D_RENDER.wireframe,
     }),
     { collapsed: true },
@@ -449,26 +461,73 @@ export default function ModelViewerSettings() {
     { collapsed: true },
   );
 
+  const [helpers] = useControls(
+    "Helpers",
+    () => ({
+      "Grid Helper": folder(
+        {
+          gridEnabled: D_HELPERS.grid.enabled,
+          gridSize: {
+            value: D_HELPERS.grid.size,
+            min: 0.1,
+            max: 100,
+            step: 0.1,
+          },
+          gridDivisions: {
+            value: D_HELPERS.grid.divisions,
+            min: 0.1,
+            max: 100,
+            step: 0.1,
+          },
+          gridColor1: D_HELPERS.grid.color1,
+          gridColor2: D_HELPERS.grid.color2,
+        },
+        { collapsed: true },
+      ),
+      "Axes Helper": folder(
+        {
+          axesEnabled: D_HELPERS.axes.enabled,
+          axesSize: {
+            value: D_HELPERS.axes.size,
+            min: 0.1,
+            max: 100,
+            step: 0.1,
+          },
+        },
+        { collapsed: true },
+      ),
+      "Gizmo Helper": folder(
+        {
+          gizmoEnabled: D_HELPERS.gizmo.enabled,
+          gizmoAlignment: {
+            options: [
+              "top-left",
+              "top-right",
+              "bottom-left",
+              "bottom-right",
+              "bottom-center",
+              "top-center",
+            ],
+            value: D_HELPERS.gizmo.alignment,
+          },
+          gizmoType: {
+            options: ["viewport", "viewcube"],
+            value: D_HELPERS.gizmo.type,
+          },
+        },
+        { collapsed: true },
+      ),
+    }),
+    { collapsed: true },
+  );
+
   return (
     <div className="fixed inset-0 flex bg-zinc-950 overflow-hidden">
       <div className="flex-1 relative">
         <Leva
           theme={{
-            colors: {
-              elevation1: "#18181b",
-              elevation2: "#27272a",
-              elevation3: "#3f3f46",
-              accent1: "#f59e0b",
-              accent2: "#d97706",
-              accent3: "#b45309",
-              highlight1: "#fcd34d",
-              highlight2: "#f59e0b",
-              highlight3: "#d97706",
-              vivid1: "#fbbf24",
-              folderWidgetColor: "#a1a1aa",
-              folderTextColor: "#d4d4d8",
-              toolTipBackground: "#27272a",
-              toolTipText: "#e4e4e7",
+            sizes: {
+              rootWidth: "480px",
             },
           }}
         />
@@ -487,6 +546,24 @@ export default function ModelViewerSettings() {
           >
             <CameraController config={camera} orbitControlsRef={orbitRef} />
             <RenderSettings config={renderConfig} />
+            <SceneHelpers
+              config={{
+                grid: {
+                  enabled: helpers.gridEnabled,
+                  size: helpers.gridSize,
+                  divisions: helpers.gridDivisions,
+                  color1: helpers.gridColor1,
+                  color2: helpers.gridColor2,
+                },
+                axes: { enabled: helpers.axesEnabled, size: helpers.axesSize },
+                gizmo: {
+                  enabled: helpers.gizmoEnabled,
+                  alignment: helpers.gizmoAlignment,
+                  type: helpers.gizmoType as any,
+                  margin: D_HELPERS.gizmo.margin,
+                },
+              }}
+            />
             <SceneLights
               ambient={ambient}
               dir1={dir1}

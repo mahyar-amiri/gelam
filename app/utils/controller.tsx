@@ -1,10 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import { PivotControls } from "@react-three/drei";
+import {
+  PivotControls,
+  useHelper,
+  GizmoHelper,
+  GizmoViewport,
+  GizmoViewcube,
+} from "@react-three/drei";
 import {
   AmbientLight,
   DirectionalLight,
@@ -12,6 +18,7 @@ import {
   SpotLight,
   CameraConfig,
   RenderConfig,
+  HelpersConfig,
 } from "@/types/controller";
 
 // Camera controller (imperative, inside Canvas)
@@ -74,7 +81,7 @@ export function CameraController({
 
 // Render settings (inside Canvas)
 export function RenderSettings({ config }: { config: RenderConfig }) {
-  const { gl, scene } = useThree();
+  const { gl } = useThree();
 
   useEffect(() => {
     const map: Record<string, THREE.ToneMapping> = {
@@ -90,32 +97,215 @@ export function RenderSettings({ config }: { config: RenderConfig }) {
     gl.toneMappingExposure = config.toneMappingExposure;
   }, [gl, config.toneMapping, config.toneMappingExposure]);
 
-  useEffect(() => {
-    if (!config.useEnvBackground) {
-      scene.background = new THREE.Color(config.backgroundColor);
-    } else {
-      scene.background = null;
-    }
-  }, [scene, config.useEnvBackground, config.backgroundColor]);
+  return (
+    <>
+      {!config.useEnvBackground && (
+        <color attach="background" args={[config.backgroundColor]} />
+      )}
+      {config.fogEnabled && (
+        <fog
+          attach="fog"
+          args={[config.fogColor, config.fogNear, config.fogFar]}
+        />
+      )}
+    </>
+  );
+}
 
-  useEffect(() => {
-    if (config.fogEnabled) {
-      scene.fog = new THREE.Fog(config.fogColor, config.fogNear, config.fogFar);
-    } else {
-      scene.fog = null;
-    }
-  }, [
-    scene,
-    config.fogEnabled,
-    config.fogColor,
-    config.fogNear,
-    config.fogFar,
-  ]);
-
-  return null;
+// Scene Helpers
+export function SceneHelpers({ config }: { config: HelpersConfig }) {
+  return (
+    <>
+      {config.grid.enabled && (
+        <gridHelper
+          args={[
+            config.grid.size,
+            config.grid.divisions,
+            config.grid.color1,
+            config.grid.color2,
+          ]}
+        />
+      )}
+      {config.axes.enabled && <axesHelper args={[config.axes.size]} />}
+      {config.gizmo.enabled && (
+        <GizmoHelper
+          alignment={config.gizmo.alignment as any}
+          margin={config.gizmo.margin}
+        >
+          {config.gizmo.type === "viewport" ? (
+            <GizmoViewport />
+          ) : (
+            <GizmoViewcube />
+          )}
+        </GizmoHelper>
+      )}
+    </>
+  );
 }
 
 // Scene Lights
+function DirLightWithHelper({
+  light,
+  renderConfig,
+  setLights,
+  propPrefix,
+}: {
+  light: DirectionalLight;
+  renderConfig: RenderConfig;
+  setLights: any;
+  propPrefix: string;
+}) {
+  const ref = useRef<any>(null);
+  useHelper(
+    light.showHelper ? ref : false,
+    THREE.DirectionalLightHelper,
+    1,
+    light.color,
+  );
+  return (
+    <>
+      <directionalLight
+        ref={ref}
+        position={[light.posX, light.posY, light.posZ]}
+        intensity={light.intensity}
+        color={light.color}
+        castShadow={renderConfig.shadowsEnabled && light.castShadow}
+      />
+      <PivotControls
+        matrix={new THREE.Matrix4().setPosition(
+          light.posX,
+          light.posY,
+          light.posZ,
+        )}
+        onDrag={(matrix) => {
+          const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
+          setLights?.({
+            [`${propPrefix}PosX`]: pos.x,
+            [`${propPrefix}PosY`]: pos.y,
+            [`${propPrefix}PosZ`]: pos.z,
+          });
+        }}
+        scale={0.5}
+        anchor={[0, 0, 0]}
+        depthTest={false}
+      >
+        <mesh>
+          <sphereGeometry args={[light.intensity * 0.05, 16, 16]} />
+          <meshBasicMaterial color={light.color} />
+        </mesh>
+      </PivotControls>
+    </>
+  );
+}
+
+function PointLightWithHelper({
+  light,
+  setLights,
+  propPrefix,
+}: {
+  light: PointLight;
+  setLights: any;
+  propPrefix: string;
+}) {
+  const ref = useRef<any>(null);
+  useHelper(
+    light.showHelper ? ref : false,
+    THREE.PointLightHelper,
+    1,
+    light.color,
+  );
+  return (
+    <>
+      <pointLight
+        ref={ref}
+        position={[light.posX, light.posY, light.posZ]}
+        intensity={light.intensity}
+        color={light.color}
+        distance={light.distance}
+        decay={light.decay}
+      />
+      <PivotControls
+        matrix={new THREE.Matrix4().setPosition(
+          light.posX,
+          light.posY,
+          light.posZ,
+        )}
+        onDrag={(matrix) => {
+          const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
+          setLights?.({
+            [`${propPrefix}PosX`]: pos.x,
+            [`${propPrefix}PosY`]: pos.y,
+            [`${propPrefix}PosZ`]: pos.z,
+          });
+        }}
+        scale={0.5}
+        anchor={[0, 0, 0]}
+        depthTest={false}
+      >
+        <mesh>
+          <sphereGeometry args={[light.intensity * 0.05, 16, 16]} />
+          <meshBasicMaterial color={light.color} />
+        </mesh>
+      </PivotControls>
+    </>
+  );
+}
+
+function SpotLightWithHelper({
+  light,
+  renderConfig,
+  setLights,
+  propPrefix,
+}: {
+  light: SpotLight;
+  renderConfig: RenderConfig;
+  setLights: any;
+  propPrefix: string;
+}) {
+  const ref = useRef<any>(null);
+  useHelper(
+    light.showHelper ? ref : false,
+    THREE.SpotLightHelper,
+    light.color as any,
+  );
+  return (
+    <>
+      <spotLight
+        ref={ref}
+        position={[light.posX, light.posY, light.posZ]}
+        intensity={light.intensity}
+        color={light.color}
+        angle={light.angle}
+        penumbra={light.penumbra}
+        castShadow={renderConfig.shadowsEnabled}
+      />
+      <PivotControls
+        matrix={new THREE.Matrix4().setPosition(
+          light.posX,
+          light.posY,
+          light.posZ,
+        )}
+        onDrag={(matrix) => {
+          const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
+          setLights?.({
+            [`${propPrefix}PosX`]: pos.x,
+            [`${propPrefix}PosY`]: pos.y,
+            [`${propPrefix}PosZ`]: pos.z,
+          });
+        }}
+        scale={0.5}
+        anchor={[0, 0, 0]}
+        depthTest={false}
+      >
+        <mesh>
+          <sphereGeometry args={[light.intensity * 0.05, 16, 16]} />
+          <meshBasicMaterial color={light.color} />
+        </mesh>
+      </PivotControls>
+    </>
+  );
+}
+
 export function SceneLights({
   ambient,
   dir1,
@@ -131,146 +321,42 @@ export function SceneLights({
   point: PointLight;
   spot: SpotLight;
   renderConfig: RenderConfig;
-  setLights?: any; // We receive Leva's setLights here
+  setLights?: any;
 }) {
   return (
     <>
       <ambientLight intensity={ambient.intensity} color={ambient.color} />
 
       {dir1.enabled && (
-        <>
-          <directionalLight
-            position={[dir1.posX, dir1.posY, dir1.posZ]}
-            intensity={dir1.intensity}
-            color={dir1.color}
-            castShadow={renderConfig.shadowsEnabled && dir1.castShadow}
-          />
-          <PivotControls
-            matrix={new THREE.Matrix4().setPosition(
-              dir1.posX,
-              dir1.posY,
-              dir1.posZ,
-            )}
-            onDrag={(matrix) => {
-              const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
-              setLights?.({
-                dir1PosX: pos.x,
-                dir1PosY: pos.y,
-                dir1PosZ: pos.z,
-              });
-            }}
-            scale={0.5}
-            anchor={[0, 0, 0]}
-            depthTest={false}
-          >
-            <mesh>
-              <sphereGeometry args={[dir1.intensity * 0.05, 16, 16]} />
-              <meshBasicMaterial color={dir1.color} />
-            </mesh>
-          </PivotControls>
-        </>
+        <DirLightWithHelper
+          light={dir1}
+          renderConfig={renderConfig}
+          setLights={setLights}
+          propPrefix="dir1"
+        />
       )}
       {dir2.enabled && (
-        <>
-          <directionalLight
-            position={[dir2.posX, dir2.posY, dir2.posZ]}
-            intensity={dir2.intensity}
-            color={dir2.color}
-            castShadow={renderConfig.shadowsEnabled && dir2.castShadow}
-          />
-          <PivotControls
-            matrix={new THREE.Matrix4().setPosition(
-              dir2.posX,
-              dir2.posY,
-              dir2.posZ,
-            )}
-            onDrag={(matrix) => {
-              const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
-              setLights?.({
-                dir2PosX: pos.x,
-                dir2PosY: pos.y,
-                dir2PosZ: pos.z,
-              });
-            }}
-            scale={0.5}
-            anchor={[0, 0, 0]}
-            depthTest={false}
-          >
-            <mesh>
-              <sphereGeometry args={[dir2.intensity * 0.05, 16, 16]} />
-              <meshBasicMaterial color={dir2.color} />
-            </mesh>
-          </PivotControls>
-        </>
+        <DirLightWithHelper
+          light={dir2}
+          renderConfig={renderConfig}
+          setLights={setLights}
+          propPrefix="dir2"
+        />
       )}
       {point.enabled && (
-        <>
-          <pointLight
-            position={[point.posX, point.posY, point.posZ]}
-            intensity={point.intensity}
-            color={point.color}
-            distance={point.distance}
-            decay={point.decay}
-          />
-          <PivotControls
-            matrix={new THREE.Matrix4().setPosition(
-              point.posX,
-              point.posY,
-              point.posZ,
-            )}
-            onDrag={(matrix) => {
-              const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
-              setLights?.({
-                pointPosX: pos.x,
-                pointPosY: pos.y,
-                pointPosZ: pos.z,
-              });
-            }}
-            scale={0.5}
-            anchor={[0, 0, 0]}
-            depthTest={false}
-          >
-            <mesh>
-              <sphereGeometry args={[point.intensity * 0.05, 16, 16]} />
-              <meshBasicMaterial color={point.color} />
-            </mesh>
-          </PivotControls>
-        </>
+        <PointLightWithHelper
+          light={point}
+          setLights={setLights}
+          propPrefix="point"
+        />
       )}
       {spot.enabled && (
-        <>
-          <spotLight
-            position={[spot.posX, spot.posY, spot.posZ]}
-            intensity={spot.intensity}
-            color={spot.color}
-            angle={spot.angle}
-            penumbra={spot.penumbra}
-            castShadow={renderConfig.shadowsEnabled}
-          />
-          <PivotControls
-            matrix={new THREE.Matrix4().setPosition(
-              spot.posX,
-              spot.posY,
-              spot.posZ,
-            )}
-            onDrag={(matrix) => {
-              const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
-              setLights?.({
-                spotPosX: pos.x,
-                spotPosY: pos.y,
-                spotPosZ: pos.z,
-              });
-            }}
-            scale={0.5}
-            anchor={[0, 0, 0]}
-            depthTest={false}
-          >
-            <mesh>
-              <sphereGeometry args={[spot.intensity * 0.05, 16, 16]} />
-              <meshBasicMaterial color={spot.color} />
-            </mesh>
-          </PivotControls>
-        </>
+        <SpotLightWithHelper
+          light={spot}
+          renderConfig={renderConfig}
+          setLights={setLights}
+          propPrefix="spot"
+        />
       )}
     </>
   );

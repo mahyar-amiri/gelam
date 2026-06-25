@@ -10,6 +10,7 @@ import {
   RenderConfig,
   MaterialOverride,
   DOFConfig,
+  HelpersConfig,
 } from "@/types/controller";
 
 export const D_TRANSFORM: Transform = {
@@ -38,6 +39,7 @@ export const D_DIR1: DirectionalLight = {
   posY: 6,
   posZ: 4,
   castShadow: false,
+  showHelper: false,
 };
 
 export const D_DIR2: DirectionalLight = {
@@ -48,6 +50,7 @@ export const D_DIR2: DirectionalLight = {
   posY: 2,
   posZ: -4,
   castShadow: false,
+  showHelper: false,
 };
 
 export const D_POINT: PointLight = {
@@ -59,6 +62,7 @@ export const D_POINT: PointLight = {
   posZ: 0,
   distance: 10,
   decay: 2,
+  showHelper: false,
 };
 
 export const D_SPOT: SpotLight = {
@@ -70,6 +74,7 @@ export const D_SPOT: SpotLight = {
   posZ: 2,
   angle: 0.4,
   penumbra: 0.2,
+  showHelper: false,
 };
 
 export const D_ENV: EnvConfig = {
@@ -150,3 +155,23 @@ export const TONE_MAPS = [
   "AgX",
   "Neutral",
 ];
+
+export const D_HELPERS: HelpersConfig = {
+  grid: {
+    enabled: false,
+    size: 10,
+    divisions: 10,
+    color1: "#444444",
+    color2: "#888888",
+  },
+  axes: {
+    enabled: false,
+    size: 5,
+  },
+  gizmo: {
+    enabled: false,
+    alignment: "bottom-right",
+    margin: [80, 80],
+    type: "viewcube",
+  },
+};
