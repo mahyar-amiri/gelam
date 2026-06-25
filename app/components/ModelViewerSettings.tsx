@@ -11,6 +11,8 @@ import {
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { EffectComposer, DepthOfField } from "@react-three/postprocessing";
 import * as THREE from "three";
+import { useControls, folder, Leva } from "leva";
+
 import {
   CameraController,
   RenderSettings,
@@ -23,9 +25,6 @@ import {
   DirectionalLight,
   PointLight,
   SpotLight,
-  EnvConfig,
-  CameraConfig,
-  DOFConfig,
   RenderConfig,
   MaterialOverride,
 } from "@/types/controller";
@@ -42,26 +41,14 @@ import {
   D_DOF,
   D_RENDER,
   D_MATERIAL,
+  ENV_PRESETS,
+  TONE_MAPS,
 } from "@/consts/controller";
-import {
-  Divider,
-  ModelUploaderSection,
-  TransformSection,
-  CameraSection,
-  DoFSection,
-  AmbientSection,
-  DirLightSection,
-  PointLightSection,
-  SpotLightSection,
-  EnvSection,
-  RenderSection,
-  MaterialSection,
-} from "@/components/Controller";
+import { ModelUploaderSection } from "@/components/Controller";
 
 function LoadingOverlay() {
   const { active, progress } = useProgress();
 
-  // Hide the overlay when nothing is loading
   if (!active) return null;
 
   return (
@@ -76,7 +63,6 @@ function LoadingOverlay() {
   );
 }
 
-// Model
 function Model({
   url,
   transform,
@@ -95,11 +81,9 @@ function Model({
   const { scene } = useGLTF(url);
   const groupRef = useRef<THREE.Group>(null);
 
-  // Apply wireframe & material overrides
   useEffect(() => {
     scene.traverse((obj: any) => {
       if (obj.isMesh && obj.material) {
-        // ... (keep existing material logic)
         const mats = Array.isArray(obj.material)
           ? obj.material
           : [obj.material];
@@ -141,7 +125,7 @@ function Model({
       scale={transform.scale}
       onPointerDown={(e) => {
         e.stopPropagation();
-        onModelClick(e.point); // Pass the exact 3D coordinate clicked
+        onModelClick(e.point);
       }}
     >
       <primitive object={scene} />
@@ -149,50 +133,179 @@ function Model({
   );
 }
 
-// useGLTF.preload(MODEL_NAME);
-
-// Main Component
 export default function ModelViewerSettings() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
   const [activeModelUrl, setActiveModelUrl] = useState<string | null>(null);
 
-  // State for all scene parameters
-  const [transform, setTransform] = useState<Transform>(D_TRANSFORM);
-  const [autoRotate, setAutoRotate] = useState<AutoRotate>(D_AUTO_ROTATE);
-  const [ambient, setAmbient] = useState<AmbientLight>(D_AMBIENT);
-  const [dir1, setDir1] = useState<DirectionalLight>(D_DIR1);
-  const [dir2, setDir2] = useState<DirectionalLight>(D_DIR2);
-  const [point, setPoint] = useState<PointLight>(D_POINT);
-  const [spot, setSpot] = useState<SpotLight>(D_SPOT);
-  const [env, setEnv] = useState<EnvConfig>(D_ENV);
-  const [camera, setCamera] = useState<CameraConfig>(D_CAMERA);
-  const [dof, setDof] = useState<DOFConfig>(D_DOF);
+  useEffect(() => {
+    const saved = localStorage.getItem("activeModelUrl");
+    if (saved) setActiveModelUrl(saved);
+  }, []);
+
+  useEffect(() => {
+    if (activeModelUrl) {
+      localStorage.setItem("activeModelUrl", activeModelUrl);
+    } else {
+      localStorage.removeItem("activeModelUrl");
+    }
+  }, [activeModelUrl]);
+
   const [focusTarget, setFocusTarget] = useState<THREE.Vector3 | null>(null);
-  const [renderConfig, setRenderConfig] = useState<RenderConfig>(D_RENDER);
-  const [material, setMaterial] = useState<MaterialOverride>(D_MATERIAL);
 
   const orbitRef = useRef<OrbitControlsImpl>(null);
 
-  function resetAll() {
-    setTransform(D_TRANSFORM);
-    setAutoRotate(D_AUTO_ROTATE);
-    setAmbient(D_AMBIENT);
-    setDir1(D_DIR1);
-    setDir2(D_DIR2);
-    setPoint(D_POINT);
-    setSpot(D_SPOT);
-    setEnv(D_ENV);
-    setCamera(D_CAMERA);
-    setDof(D_DOF);
-    setFocusTarget(null);
-    setRenderConfig(D_RENDER);
-    setMaterial(D_MATERIAL);
-  }
+  const [transform] = useControls("Transform", () => ({
+    posX: { value: D_TRANSFORM.posX, min: -5, max: 5, step: 0.01 },
+    posY: { value: D_TRANSFORM.posY, min: -5, max: 5, step: 0.01 },
+    posZ: { value: D_TRANSFORM.posZ, min: -5, max: 5, step: 0.01 },
+    rotX: { value: D_TRANSFORM.rotX, min: -180, max: 180, step: 1 },
+    rotY: { value: D_TRANSFORM.rotY, min: -180, max: 180, step: 1 },
+    rotZ: { value: D_TRANSFORM.rotZ, min: -180, max: 180, step: 1 },
+    scale: { value: D_TRANSFORM.scale, min: 0.01, max: 10, step: 0.01 },
+    "Auto Rotate": folder({
+      autoRotateEnabled: D_AUTO_ROTATE.enabled,
+      autoRotateSpeed: { value: D_AUTO_ROTATE.speed, min: 0.1, max: 10, step: 0.1 },
+      autoRotateAxis: { options: ["x", "y", "z"], value: D_AUTO_ROTATE.axis },
+    }, { collapsed: true }),
+  }), { collapsed: true });
+
+  const autoRotate = {
+    enabled: transform.autoRotateEnabled,
+    speed: transform.autoRotateSpeed,
+    axis: transform.autoRotateAxis as "x" | "y" | "z",
+  };
+
+  const [camera, setCamera] = useControls("Camera", () => ({
+    fov: { value: D_CAMERA.fov, min: 10, max: 120, step: 1 },
+    near: { value: D_CAMERA.near, min: 0.0001, step: 0.001 },
+    far: { value: D_CAMERA.far, min: 1, step: 10 },
+    orbitEnabled: D_CAMERA.orbitEnabled,
+    enablePan: D_CAMERA.enablePan,
+    enableZoom: D_CAMERA.enableZoom,
+    autoRotateOrbit: D_CAMERA.autoRotateOrbit,
+    autoRotateOrbitSpeed: { value: D_CAMERA.autoRotateOrbitSpeed, min: -20, max: 20, step: 0.5 },
+    dampingFactor: { value: D_CAMERA.dampingFactor, min: 0.01, max: 0.5, step: 0.01 },
+    minDistance: { value: D_CAMERA.minDistance, min: 0.001, max: 10, step: 0.001 },
+    maxDistance: { value: D_CAMERA.maxDistance, min: 1, max: 500, step: 1 },
+    minPolarAngle: { value: D_CAMERA.minPolarAngle, min: 0, max: 180, step: 1 },
+    maxPolarAngle: { value: D_CAMERA.maxPolarAngle, min: 0, max: 180, step: 1 },
+    posX: { value: D_CAMERA.posX, min: -20, max: 20 },
+    posY: { value: D_CAMERA.posY, min: -20, max: 20 },
+    posZ: { value: D_CAMERA.posZ, min: -20, max: 20 },
+    targetX: { value: D_CAMERA.targetX, min: -10, max: 10 },
+    targetY: { value: D_CAMERA.targetY, min: -10, max: 10 },
+    targetZ: { value: D_CAMERA.targetZ, min: -10, max: 10 },
+  }), { collapsed: true });
+
+  const [dof] = useControls("Depth of Field", () => ({
+    enabled: D_DOF.enabled,
+    focalLength: { value: D_DOF.focalLength, min: 0.001, max: 0.1, step: 0.001 },
+    bokehScale: { value: D_DOF.bokehScale, min: 0, max: 10, step: 0.1 },
+  }), { collapsed: true });
+
+  const [lights, setLights] = useControls("Lights", () => ({
+    "Ambient Light": folder({
+      ambientIntensity: { value: D_AMBIENT.intensity, min: 0, max: 5, step: 0.05 },
+      ambientColor: D_AMBIENT.color,
+    }, { collapsed: true }),
+    "Directional Light 1": folder({
+      dir1Enabled: D_DIR1.enabled,
+      dir1Intensity: { value: D_DIR1.intensity, min: 0, max: 20, step: 0.1 },
+      dir1Color: D_DIR1.color,
+      dir1PosX: D_DIR1.posX,
+      dir1PosY: D_DIR1.posY,
+      dir1PosZ: D_DIR1.posZ,
+      dir1CastShadow: D_DIR1.castShadow,
+    }, { collapsed: true }),
+    "Directional Light 2": folder({
+      dir2Enabled: D_DIR2.enabled,
+      dir2Intensity: { value: D_DIR2.intensity, min: 0, max: 20, step: 0.1 },
+      dir2Color: D_DIR2.color,
+      dir2PosX: D_DIR2.posX,
+      dir2PosY: D_DIR2.posY,
+      dir2PosZ: D_DIR2.posZ,
+      dir2CastShadow: D_DIR2.castShadow,
+    }, { collapsed: true }),
+    "Point Light": folder({
+      pointEnabled: D_POINT.enabled,
+      pointIntensity: { value: D_POINT.intensity, min: 0, max: 20, step: 0.1 },
+      pointColor: D_POINT.color,
+      pointPosX: D_POINT.posX,
+      pointPosY: D_POINT.posY,
+      pointPosZ: D_POINT.posZ,
+      pointDistance: { value: D_POINT.distance, min: 0, max: 50, step: 0.5 },
+      pointDecay: { value: D_POINT.decay, min: 0, max: 5, step: 0.05 },
+    }, { collapsed: true }),
+    "Spot Light": folder({
+      spotEnabled: D_SPOT.enabled,
+      spotIntensity: { value: D_SPOT.intensity, min: 0, max: 50, step: 0.5 },
+      spotColor: D_SPOT.color,
+      spotPosX: D_SPOT.posX,
+      spotPosY: D_SPOT.posY,
+      spotPosZ: D_SPOT.posZ,
+      spotAngle: { value: D_SPOT.angle, min: 0, max: Math.PI / 2, step: 0.01 },
+      spotPenumbra: { value: D_SPOT.penumbra, min: 0, max: 1, step: 0.01 },
+    }, { collapsed: true }),
+  }), { collapsed: true });
+
+  const ambient: AmbientLight = { intensity: lights.ambientIntensity, color: lights.ambientColor };
+  const dir1: DirectionalLight = { enabled: lights.dir1Enabled, intensity: lights.dir1Intensity, color: lights.dir1Color, posX: lights.dir1PosX, posY: lights.dir1PosY, posZ: lights.dir1PosZ, castShadow: lights.dir1CastShadow };
+  const dir2: DirectionalLight = { enabled: lights.dir2Enabled, intensity: lights.dir2Intensity, color: lights.dir2Color, posX: lights.dir2PosX, posY: lights.dir2PosY, posZ: lights.dir2PosZ, castShadow: lights.dir2CastShadow };
+  const point: PointLight = { enabled: lights.pointEnabled, intensity: lights.pointIntensity, color: lights.pointColor, posX: lights.pointPosX, posY: lights.pointPosY, posZ: lights.pointPosZ, distance: lights.pointDistance, decay: lights.pointDecay };
+  const spot: SpotLight = { enabled: lights.spotEnabled, intensity: lights.spotIntensity, color: lights.spotColor, posX: lights.spotPosX, posY: lights.spotPosY, posZ: lights.spotPosZ, angle: lights.spotAngle, penumbra: lights.spotPenumbra };
+
+  const [env] = useControls("Environment", () => ({
+    preset: { options: ENV_PRESETS, value: D_ENV.preset },
+    showBackground: D_ENV.showBackground,
+    backgroundBlur: { value: D_ENV.backgroundBlur, min: 0, max: 1, step: 0.01 },
+    envIntensity: { value: D_ENV.envIntensity, min: 0, max: 5, step: 0.05 },
+  }), { collapsed: true });
+
+  const [renderConfig] = useControls("Render", () => ({
+    toneMapping: { options: TONE_MAPS, value: D_RENDER.toneMapping },
+    toneMappingExposure: { value: D_RENDER.toneMappingExposure, min: 0, max: 5, step: 0.05 },
+    useEnvBackground: D_RENDER.useEnvBackground,
+    backgroundColor: D_RENDER.backgroundColor,
+    shadowsEnabled: D_RENDER.shadowsEnabled,
+    fogEnabled: D_RENDER.fogEnabled,
+    fogColor: D_RENDER.fogColor,
+    fogNear: { value: D_RENDER.fogNear, min: 0, max: 50, step: 0.5 },
+    fogFar: { value: D_RENDER.fogFar, min: 0, max: 200, step: 1 },
+    wireframe: D_RENDER.wireframe,
+  }), { collapsed: true });
+
+  const [material] = useControls("Material Override", () => ({
+    enabled: D_MATERIAL.enabled,
+    color: D_MATERIAL.color,
+    roughness: { value: D_MATERIAL.roughness, min: 0, max: 1, step: 0.01 },
+    metalness: { value: D_MATERIAL.metalness, min: 0, max: 1, step: 0.01 },
+    opacity: { value: D_MATERIAL.opacity, min: 0, max: 1, step: 0.01 },
+    transparent: D_MATERIAL.transparent,
+  }), { collapsed: true });
 
   return (
     <div className="fixed inset-0 flex bg-zinc-950 overflow-hidden">
       <div className="flex-1 relative">
+        <Leva
+          theme={{
+            colors: {
+              elevation1: "#18181b",
+              elevation2: "#27272a",
+              elevation3: "#3f3f46",
+              accent1: "#f59e0b",
+              accent2: "#d97706",
+              accent3: "#b45309",
+              highlight1: "#fcd34d",
+              highlight2: "#f59e0b",
+              highlight3: "#d97706",
+              vivid1: "#fbbf24",
+              folderWidgetColor: "#a1a1aa",
+              folderTextColor: "#d4d4d8",
+              toolTipBackground: "#27272a",
+              toolTipText: "#e4e4e7",
+            },
+          }}
+        />
         {/* Canvas */}
         <div className="absolute inset-0">
           <Canvas
@@ -211,23 +324,20 @@ export default function ModelViewerSettings() {
             <SceneLights
               ambient={ambient}
               dir1={dir1}
-              setDir1={setDir1}
               dir2={dir2}
-              setDir2={setDir2}
               point={point}
-              setPoint={setPoint}
               spot={spot}
-              setSpot={setSpot}
               renderConfig={renderConfig}
+              setLights={setLights}
             />
             <Suspense fallback={null}>
               {activeModelUrl && (
                 <Model
                   url={activeModelUrl}
-                  transform={D_TRANSFORM}
-                  autoRotate={D_AUTO_ROTATE}
-                  renderConfig={D_RENDER}
-                  materialConfig={D_MATERIAL}
+                  transform={transform}
+                  autoRotate={autoRotate}
+                  renderConfig={renderConfig}
+                  materialConfig={material}
                   onModelClick={(point) => setFocusTarget(point)}
                 />
               )}
@@ -277,15 +387,14 @@ export default function ModelViewerSettings() {
                       Math.abs(camera.targetY - tgt.y) > 0.01 ||
                       Math.abs(camera.targetZ - tgt.z) > 0.01
                     ) {
-                      setCamera((c) => ({
-                        ...c,
+                      setCamera({
                         posX: pos.x,
                         posY: pos.y,
                         posZ: pos.z,
                         targetX: tgt.x,
                         targetY: tgt.y,
                         targetZ: tgt.z,
-                      }));
+                      });
                     }
                   }
                 }}
@@ -313,7 +422,6 @@ export default function ModelViewerSettings() {
               d="M9 5l7 7-7 7"
             />
           </svg>
-          {/* {sidebarOpen ? "Hide" : "Controls"} */}
         </button>
       </div>
 
@@ -332,14 +440,8 @@ export default function ModelViewerSettings() {
           {/* Header */}
           <div className="px-4 py-3 border-b border-zinc-800 shrink-0 flex items-center justify-between">
             <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
-              Scene Controls
+              Model Settings
             </p>
-            <button
-              onClick={resetAll}
-              className="text-[10px] uppercase tracking-wider text-zinc-600 hover:text-amber-400 transition-colors cursor-pointer"
-            >
-              Reset all
-            </button>
           </div>
 
           {/* Scrollable body */}
@@ -351,47 +453,9 @@ export default function ModelViewerSettings() {
             }}
           >
             <ModelUploaderSection
-              selectedModel={activeModelUrl}
+              selectedModel={activeModelUrl || ""}
               onSelectModel={setActiveModelUrl}
             />
-            <Divider />
-            <TransformSection
-              transform={transform}
-              setTransform={setTransform}
-              autoRotate={autoRotate}
-              setAutoRotate={setAutoRotate}
-            />
-            <Divider />
-            <CameraSection camera={camera} setCamera={setCamera} />
-            <Divider />
-            <DoFSection dof={dof} setDof={setDof} />
-            <Divider />
-            <AmbientSection light={ambient} setLight={setAmbient} />
-            <Divider />
-            <DirLightSection
-              label="Dir Light 1"
-              light={dir1}
-              setLight={setDir1}
-              defaults={D_DIR1}
-            />
-            <Divider />
-            <DirLightSection
-              label="Dir Light 2"
-              light={dir2}
-              setLight={setDir2}
-              defaults={D_DIR2}
-            />
-            <Divider />
-            <PointLightSection light={point} setLight={setPoint} />
-            <Divider />
-            <SpotLightSection light={spot} setLight={setSpot} />
-            <Divider />
-            <EnvSection env={env} setEnv={setEnv} />
-            <Divider />
-            <RenderSection config={renderConfig} setConfig={setRenderConfig} />
-            <Divider />
-            <MaterialSection config={material} setConfig={setMaterial} />
-            <div className="h-6" />
           </div>
         </div>
       </div>

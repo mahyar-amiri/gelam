@@ -1,0 +1,16 @@
+
+> gelam-website@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.7 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+✓ Ready in 561ms
+
+○ Compiling /settings ...
+ GET /settings 200 in 8.1s (next.js: 6.8s, application-code: 1271ms)
+ GET /api/models 200 in 941ms (next.js: 906ms, application-code: 35ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
+ GET /settings 200 in 1684ms (next.js: 406ms, application-code: 1278ms)
+ GET /api/models 200 in 76ms (next.js: 63ms, application-code: 13ms)
+[browser] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.

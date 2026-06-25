@@ -33,9 +33,6 @@ export function CameraController({
   }, [camera, config.fov, config.near, config.far]);
 
   useEffect(() => {
-    // If orbit is enabled, we need to manually update both the camera and the orbit controls target
-    // If the difference is extremely small, it might be triggered by orbitcontrols itself,
-    // so we shouldn't overwrite unless difference is significant enough.
     const posDiff =
       Math.abs(camera.position.x - config.posX) +
       Math.abs(camera.position.y - config.posY) +
@@ -46,9 +43,6 @@ export function CameraController({
         Math.abs(orbitControlsRef.current.target.z - config.targetZ)
       : 0;
 
-    // We only force update from sidebar if the diff is significant (> 0.02 is safe, as we write 0.01 threshold in ModelViewerSettings)
-    // Wait, the easiest is to just set it, but to prevent feedback loop, maybe only update if dist is > 0.02
-    // Actually, setting camera position and target directly is fine. OrbitControls will pick it up when we call update().
     if (!config.orbitEnabled) {
       camera.position.set(config.posX, config.posY, config.posZ);
       camera.lookAt(config.targetX, config.targetY, config.targetZ);
@@ -125,25 +119,19 @@ export function RenderSettings({ config }: { config: RenderConfig }) {
 export function SceneLights({
   ambient,
   dir1,
-  setDir1,
   dir2,
-  setDir2,
   point,
-  setPoint,
   spot,
-  setSpot,
   renderConfig,
+  setLights,
 }: {
   ambient: AmbientLight;
   dir1: DirectionalLight;
-  setDir1?: React.Dispatch<React.SetStateAction<DirectionalLight>>;
   dir2: DirectionalLight;
-  setDir2?: React.Dispatch<React.SetStateAction<DirectionalLight>>;
   point: PointLight;
-  setPoint?: React.Dispatch<React.SetStateAction<PointLight>>;
   spot: SpotLight;
-  setSpot?: React.Dispatch<React.SetStateAction<SpotLight>>;
   renderConfig: RenderConfig;
+  setLights?: any; // We receive Leva's setLights here
 }) {
   return (
     <>
@@ -165,12 +153,11 @@ export function SceneLights({
             )}
             onDrag={(matrix) => {
               const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
-              setDir1?.((prev) => ({
-                ...prev,
-                posX: pos.x,
-                posY: pos.y,
-                posZ: pos.z,
-              }));
+              setLights?.({
+                dir1PosX: pos.x,
+                dir1PosY: pos.y,
+                dir1PosZ: pos.z,
+              });
             }}
             scale={0.5}
             anchor={[0, 0, 0]}
@@ -199,12 +186,11 @@ export function SceneLights({
             )}
             onDrag={(matrix) => {
               const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
-              setDir2?.((prev) => ({
-                ...prev,
-                posX: pos.x,
-                posY: pos.y,
-                posZ: pos.z,
-              }));
+              setLights?.({
+                dir2PosX: pos.x,
+                dir2PosY: pos.y,
+                dir2PosZ: pos.z,
+              });
             }}
             scale={0.5}
             anchor={[0, 0, 0]}
@@ -234,12 +220,11 @@ export function SceneLights({
             )}
             onDrag={(matrix) => {
               const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
-              setPoint?.((prev) => ({
-                ...prev,
-                posX: pos.x,
-                posY: pos.y,
-                posZ: pos.z,
-              }));
+              setLights?.({
+                pointPosX: pos.x,
+                pointPosY: pos.y,
+                pointPosZ: pos.z,
+              });
             }}
             scale={0.5}
             anchor={[0, 0, 0]}
@@ -270,12 +255,11 @@ export function SceneLights({
             )}
             onDrag={(matrix) => {
               const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
-              setSpot?.((prev) => ({
-                ...prev,
-                posX: pos.x,
-                posY: pos.y,
-                posZ: pos.z,
-              }));
+              setLights?.({
+                spotPosX: pos.x,
+                spotPosY: pos.y,
+                spotPosZ: pos.z,
+              });
             }}
             scale={0.5}
             anchor={[0, 0, 0]}
