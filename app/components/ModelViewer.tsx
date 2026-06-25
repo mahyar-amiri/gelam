@@ -2,7 +2,7 @@
 
 import { Suspense, useRef, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, useGLTF, OrbitControls } from "@react-three/drei";
+import { Environment, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import {
   CameraController,
@@ -49,11 +49,13 @@ function Model({
 
   // Apply wireframe & material overrides
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     scene.traverse((obj: any) => {
       if (obj.isMesh && obj.material) {
         const mats = Array.isArray(obj.material)
           ? obj.material
           : [obj.material];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mats.forEach((mat: any) => {
           mat.wireframe = renderConfig.wireframe;
           if (materialConfig.enabled) {
@@ -100,7 +102,6 @@ useGLTF.preload(MODEL_NAME);
 
 export default function ModelViewer() {
   // Set configs
-  D_CAMERA.orbitEnabled = false;
 
   return (
     <div className="w-screen h-screen overflow-hidden fixed inset-0 a-z-10 bg-zinc-950 bg-[url('/background-blur.jpg')] bg-cover bg-center">
@@ -114,7 +115,7 @@ export default function ModelViewer() {
         gl={{ logarithmicDepthBuffer: true }}
         shadows={D_RENDER.shadowsEnabled}
       >
-        <CameraController config={D_CAMERA} />
+        <CameraController config={{ ...D_CAMERA, orbitEnabled: false }} />
         <RenderSettings config={D_RENDER} />
         <SceneLights
           ambient={D_AMBIENT}
@@ -132,27 +133,13 @@ export default function ModelViewer() {
             materialConfig={D_MATERIAL}
           />
           <Environment
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             preset={D_ENV.preset as any}
             background={D_ENV.showBackground && D_RENDER.useEnvBackground}
             backgroundBlurriness={D_ENV.backgroundBlur}
             environmentIntensity={D_ENV.envIntensity}
           />
         </Suspense>
-        {D_CAMERA.orbitEnabled && (
-          <OrbitControls
-            makeDefault
-            minDistance={D_CAMERA.minDistance}
-            maxDistance={D_CAMERA.maxDistance}
-            minPolarAngle={THREE.MathUtils.degToRad(D_CAMERA.minPolarAngle)}
-            maxPolarAngle={THREE.MathUtils.degToRad(D_CAMERA.maxPolarAngle)}
-            enablePan={D_CAMERA.enablePan}
-            enableZoom={D_CAMERA.enableZoom}
-            autoRotate={D_CAMERA.autoRotateOrbit}
-            autoRotateSpeed={D_CAMERA.autoRotateOrbitSpeed}
-            dampingFactor={D_CAMERA.dampingFactor}
-            enableDamping
-          />
-        )}
       </Canvas>
     </div>
   );
