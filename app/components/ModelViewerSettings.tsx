@@ -11,7 +11,7 @@ import {
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { EffectComposer, DepthOfField } from "@react-three/postprocessing";
 import * as THREE from "three";
-import { useControls, folder, Leva, button, useCreateStore, LevaPanel } from "leva";
+import { useControls, folder, button, useCreateStore, LevaPanel } from "leva";
 
 import {
   CameraController,
@@ -163,7 +163,7 @@ export default function ModelViewerSettings() {
   const orbitRef = useRef<OrbitControlsImpl>(null);
   const store = useCreateStore();
 
-  const [globalStore, setGlobalStore] = useControls(
+  useControls(
     () => ({
       "Reset All": button(() => {
         store.setValueAtPath("Transform.posX", D_TRANSFORM.posX, true);
@@ -282,7 +282,7 @@ export default function ModelViewerSettings() {
     { store }
   );
 
-  const [transform, setTransform] = useControls(
+  const [transform] = useControls(
     "Transform",
     () => ({
       "Reset Transform": button(() => {
@@ -729,19 +729,24 @@ export default function ModelViewerSettings() {
     { store, collapsed: true },
   );
 
-  // Store these just so ESLint shuts up
-  useEffect(() => {
-    if (!globalStore) return;
-  }, [globalStore]);
-
   return (
     <div className="fixed inset-0 flex bg-zinc-950 overflow-hidden">
+      <style dangerouslySetInnerHTML={{__html: `
+        :root {
+          --leva-sizes-rootWidth: 480px;
+        }
+        .leva-c-hHqakV {
+           max-height: 60vh !important;
+           overflow-y: auto !important;
+           overflow-x: hidden !important;
+        }
+      `}} />
       <div className="flex-1 relative">
+        {/* Leva wrapper to constrain height/scroll safely */}
         <div style={{ position: "absolute", top: 10, right: 10, zIndex: 100, width: 480, maxHeight: "60vh", overflowY: "auto", overflowX: "hidden" }}>
           <LevaPanel
             store={store}
             fill
-            titleBar={false}
             theme={{
               sizes: {
                 rootWidth: "100%",
