@@ -157,11 +157,13 @@ function DirLightWithHelper({
   renderConfig,
   setLights,
   propPrefix,
+  modelPosition,
 }: {
   light: DirectionalLight;
   renderConfig: RenderConfig;
   setLights: any;
   propPrefix: string;
+  modelPosition?: {x:number, y:number, z:number};
 }) {
   const ref = useRef<any>(null);
   useHelper(
@@ -286,11 +288,13 @@ function SpotLightWithHelper({
   renderConfig,
   setLights,
   propPrefix,
+  modelPosition,
 }: {
   light: SpotLight;
   renderConfig: RenderConfig;
   setLights: any;
   propPrefix: string;
+  modelPosition?: {x:number, y:number, z:number};
 }) {
   const ref = useRef<any>(null);
   useHelper(
@@ -351,16 +355,22 @@ export function SceneLights({
   ambient,
   dir1,
   dir2,
-  point,
-  spot,
+  point1,
+  point2,
+  spot1,
+  spot2,
+  modelPosition = {x:0, y:0, z:0},
   renderConfig,
   setLights,
 }: {
   ambient: AmbientLight;
   dir1: DirectionalLight;
   dir2: DirectionalLight;
-  point: PointLight;
-  spot: SpotLight;
+  point1: PointLight;
+  point2: PointLight;
+  spot1: SpotLight;
+  spot2: SpotLight;
+  modelPosition?: {x:number, y:number, z:number};
   renderConfig: RenderConfig;
   setLights?: any;
 }) {
@@ -374,6 +384,7 @@ export function SceneLights({
           renderConfig={renderConfig}
           setLights={setLights}
           propPrefix="dir1"
+          modelPosition={modelPosition}
         />
       )}
       {dir2.enabled && (
@@ -382,21 +393,39 @@ export function SceneLights({
           renderConfig={renderConfig}
           setLights={setLights}
           propPrefix="dir2"
+          modelPosition={modelPosition}
         />
       )}
-      {point.enabled && (
+      {point1.enabled && (
         <PointLightWithHelper
-          light={point}
+          light={point1}
           setLights={setLights}
-          propPrefix="point"
+          propPrefix="point1"
         />
       )}
-      {spot.enabled && (
+      {point2.enabled && (
+        <PointLightWithHelper
+          light={point2}
+          setLights={setLights}
+          propPrefix="point2"
+        />
+      )}
+      {spot1.enabled && (
         <SpotLightWithHelper
-          light={spot}
+          light={spot1}
           renderConfig={renderConfig}
           setLights={setLights}
-          propPrefix="spot"
+          propPrefix="spot1"
+          modelPosition={modelPosition}
+        />
+      )}
+      {spot2.enabled && (
+        <SpotLightWithHelper
+          light={spot2}
+          renderConfig={renderConfig}
+          setLights={setLights}
+          propPrefix="spot2"
+          modelPosition={modelPosition}
         />
       )}
     </>

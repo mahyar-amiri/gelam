@@ -21,8 +21,10 @@ import {
   D_AMBIENT,
   D_DIR1,
   D_DIR2,
-  D_POINT,
-  D_SPOT,
+  D_POINT1,
+  D_POINT2,
+  D_SPOT1,
+  D_SPOT2,
   D_ENV,
   D_CAMERA,
   D_RENDER,
@@ -83,13 +85,13 @@ function Model({
   return (
     <group
       ref={groupRef}
-      position={[transform.posX, transform.posY, transform.posZ]}
+      position={[transform.position.x, transform.position.y, transform.position.z]}
       rotation={[
-        THREE.MathUtils.degToRad(transform.rotX),
-        THREE.MathUtils.degToRad(transform.rotY),
-        THREE.MathUtils.degToRad(transform.rotZ),
+        THREE.MathUtils.degToRad(transform.rotation.x),
+        THREE.MathUtils.degToRad(transform.rotation.y),
+        THREE.MathUtils.degToRad(transform.rotation.z),
       ]}
-      scale={transform.scale}
+      scale={[transform.scale.x, transform.scale.y, transform.scale.z]}
     >
       <primitive object={scene} />
     </group>
@@ -106,7 +108,7 @@ export default function ModelViewer() {
     <div className="w-screen h-screen overflow-hidden fixed inset-0 a-z-10 bg-zinc-950 bg-[url('/background-blur.jpg')] bg-cover bg-center">
       <Canvas
         camera={{
-          position: [D_CAMERA.posX, D_CAMERA.posY, D_CAMERA.posZ],
+          position: [D_CAMERA.position.x, D_CAMERA.position.y, D_CAMERA.position.z],
           fov: D_CAMERA.fov,
           near: D_CAMERA.near,
           far: D_CAMERA.far,
@@ -120,9 +122,12 @@ export default function ModelViewer() {
           ambient={D_AMBIENT}
           dir1={D_DIR1}
           dir2={D_DIR2}
-          point={D_POINT}
-          spot={D_SPOT}
+          point1={D_POINT1}
+          point2={D_POINT2}
+          spot1={D_SPOT1}
+          spot2={D_SPOT2}
           renderConfig={D_RENDER}
+          modelPosition={D_TRANSFORM.position}
         />
         <Suspense fallback={null}>
           <Model

@@ -22,6 +22,12 @@ export interface DirectionalLight {
   position: Vector3Type;
   castShadow: boolean;
   showHelper: boolean;
+  helperSize: number;
+  showPivotControls: boolean;
+  showSphere: boolean;
+  sphereScale: number;
+  customTargetEnabled: boolean;
+  customTargetPosition: Vector3Type;
 }
 
 export interface PointLight {
@@ -32,6 +38,10 @@ export interface PointLight {
   distance: number;
   decay: number;
   showHelper: boolean;
+  helperSize: number;
+  showPivotControls: boolean;
+  showSphere: boolean;
+  sphereScale: number;
 }
 
 export interface SpotLight {
@@ -42,6 +52,11 @@ export interface SpotLight {
   angle: number;
   penumbra: number;
   showHelper: boolean;
+  showPivotControls: boolean;
+  showSphere: boolean;
+  sphereScale: number;
+  customTargetEnabled: boolean;
+  customTargetPosition: Vector3Type;
 }
 
 export interface EnvConfig {
@@ -132,4 +147,10 @@ export interface HelpersConfig {
   grid: GridHelperConfig;
   axes: AxesHelperConfig;
   gizmo: GizmoHelperConfig;
+}
+
+export interface AutoRotate {
+  enabled: boolean;
+  speed: number;
+  axis: string;
 }
