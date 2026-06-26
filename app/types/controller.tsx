@@ -1,17 +1,13 @@
-export interface Transform {
-  posX: number;
-  posY: number;
-  posZ: number;
-  rotX: number;
-  rotY: number;
-  rotZ: number;
-  scale: number;
+export interface Vector3Type {
+  x: number;
+  y: number;
+  z: number;
 }
 
-export interface AutoRotate {
-  enabled: boolean;
-  speed: number;
-  axis: "x" | "y" | "z";
+export interface Transform {
+  position: Vector3Type;
+  rotation: Vector3Type;
+  scale: Vector3Type;
 }
 
 export interface AmbientLight {
@@ -23,9 +19,7 @@ export interface DirectionalLight {
   enabled: boolean;
   intensity: number;
   color: string;
-  posX: number;
-  posY: number;
-  posZ: number;
+  position: Vector3Type;
   castShadow: boolean;
   showHelper: boolean;
 }
@@ -34,9 +28,7 @@ export interface PointLight {
   enabled: boolean;
   intensity: number;
   color: string;
-  posX: number;
-  posY: number;
-  posZ: number;
+  position: Vector3Type;
   distance: number;
   decay: number;
   showHelper: boolean;
@@ -46,9 +38,7 @@ export interface SpotLight {
   enabled: boolean;
   intensity: number;
   color: string;
-  posX: number;
-  posY: number;
-  posZ: number;
+  position: Vector3Type;
   angle: number;
   penumbra: number;
   showHelper: boolean;
@@ -65,12 +55,8 @@ export interface CameraConfig {
   fov: number;
   near: number;
   far: number;
-  posX: number;
-  posY: number;
-  posZ: number;
-  targetX: number;
-  targetY: number;
-  targetZ: number;
+  position: Vector3Type;
+  target: Vector3Type;
   orbitEnabled: boolean;
   minDistance: number;
   maxDistance: number;

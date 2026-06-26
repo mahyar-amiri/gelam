@@ -21,7 +21,6 @@ import {
 } from "@/utils/controller";
 import {
   Transform,
-  AutoRotate,
   AmbientLight,
   DirectionalLight,
   PointLight,
@@ -31,7 +30,6 @@ import {
 } from "@/types/controller";
 import {
   D_TRANSFORM,
-  D_AUTO_ROTATE,
   D_AMBIENT,
   D_DIR1,
   D_DIR2,
@@ -67,14 +65,12 @@ function LoadingOverlay() {
 function Model({
   url,
   transform,
-  autoRotate,
   renderConfig,
   materialConfig,
   onModelClick,
 }: {
   url: string;
   transform: Transform;
-  autoRotate: AutoRotate;
   renderConfig: RenderConfig;
   materialConfig: MaterialOverride;
   onModelClick: (point: THREE.Vector3) => void;
@@ -104,26 +100,20 @@ function Model({
     });
   }, [scene, renderConfig.wireframe, materialConfig]);
 
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-    if (autoRotate.enabled) {
-      const rad = delta * autoRotate.speed;
-      if (autoRotate.axis === "x") groupRef.current.rotation.x += rad;
-      if (autoRotate.axis === "y") groupRef.current.rotation.y += rad;
-      if (autoRotate.axis === "z") groupRef.current.rotation.z += rad;
-    }
-  });
-
   return (
     <group
       ref={groupRef}
-      position={[transform.posX, transform.posY, transform.posZ]}
-      rotation={[
-        THREE.MathUtils.degToRad(transform.rotX),
-        THREE.MathUtils.degToRad(transform.rotY),
-        THREE.MathUtils.degToRad(transform.rotZ),
+      position={[
+        transform.position.x,
+        transform.position.y,
+        transform.position.z,
       ]}
-      scale={transform.scale}
+      rotation={[
+        THREE.MathUtils.degToRad(transform.rotation.x),
+        THREE.MathUtils.degToRad(transform.rotation.y),
+        THREE.MathUtils.degToRad(transform.rotation.z),
+      ]}
+      scale={[transform.scale.x, transform.scale.y, transform.scale.z]}
       onPointerDown={(e) => {
         e.stopPropagation();
         onModelClick(e.point);
@@ -177,16 +167,9 @@ export default function ModelViewerSettings() {
     "Reset All": button(() => {
       if (setters.current.setTransform) {
         setters.current.setTransform({
-          posX: D_TRANSFORM.posX,
-          posY: D_TRANSFORM.posY,
-          posZ: D_TRANSFORM.posZ,
-          rotX: D_TRANSFORM.rotX,
-          rotY: D_TRANSFORM.rotY,
-          rotZ: D_TRANSFORM.rotZ,
+          position: D_TRANSFORM.position,
+          rotation: D_TRANSFORM.rotation,
           scale: D_TRANSFORM.scale,
-          autoRotateEnabled: D_AUTO_ROTATE.enabled,
-          autoRotateSpeed: D_AUTO_ROTATE.speed,
-          autoRotateAxis: D_AUTO_ROTATE.axis,
         });
       }
       if (setters.current.setCamera) {
@@ -204,12 +187,8 @@ export default function ModelViewerSettings() {
           maxDistance: D_CAMERA.maxDistance,
           minPolarAngle: D_CAMERA.minPolarAngle,
           maxPolarAngle: D_CAMERA.maxPolarAngle,
-          posX: D_CAMERA.posX,
-          posY: D_CAMERA.posY,
-          posZ: D_CAMERA.posZ,
-          targetX: D_CAMERA.targetX,
-          targetY: D_CAMERA.targetY,
-          targetZ: D_CAMERA.targetZ,
+          position: D_CAMERA.position,
+          target: D_CAMERA.target,
         });
       }
       if (setters.current.setDof) {
@@ -227,34 +206,42 @@ export default function ModelViewerSettings() {
           dir1ShowHelper: D_DIR1.showHelper,
           dir1Intensity: D_DIR1.intensity,
           dir1Color: D_DIR1.color,
-          dir1PosX: D_DIR1.posX,
-          dir1PosY: D_DIR1.posY,
-          dir1PosZ: D_DIR1.posZ,
+          dir1Position: {
+            x: D_DIR1.position.x,
+            y: D_DIR1.position.y,
+            z: D_DIR1.position.z,
+          },
           dir1CastShadow: D_DIR1.castShadow,
           dir2Enabled: D_DIR2.enabled,
           dir2ShowHelper: D_DIR2.showHelper,
           dir2Intensity: D_DIR2.intensity,
           dir2Color: D_DIR2.color,
-          dir2PosX: D_DIR2.posX,
-          dir2PosY: D_DIR2.posY,
-          dir2PosZ: D_DIR2.posZ,
+          dir2Position: {
+            x: D_DIR2.position.x,
+            y: D_DIR2.position.y,
+            z: D_DIR2.position.z,
+          },
           dir2CastShadow: D_DIR2.castShadow,
           pointEnabled: D_POINT.enabled,
           pointShowHelper: D_POINT.showHelper,
           pointIntensity: D_POINT.intensity,
           pointColor: D_POINT.color,
-          pointPosX: D_POINT.posX,
-          pointPosY: D_POINT.posY,
-          pointPosZ: D_POINT.posZ,
+          pointPosition: {
+            x: D_POINT.position.x,
+            y: D_POINT.position.y,
+            z: D_POINT.position.z,
+          },
           pointDistance: D_POINT.distance,
           pointDecay: D_POINT.decay,
           spotEnabled: D_SPOT.enabled,
           spotShowHelper: D_SPOT.showHelper,
           spotIntensity: D_SPOT.intensity,
           spotColor: D_SPOT.color,
-          spotPosX: D_SPOT.posX,
-          spotPosY: D_SPOT.posY,
-          spotPosZ: D_SPOT.posZ,
+          spotPosition: {
+            x: D_SPOT.position.x,
+            y: D_SPOT.position.y,
+            z: D_SPOT.position.z,
+          },
           spotAngle: D_SPOT.angle,
           spotPenumbra: D_SPOT.penumbra,
         });
@@ -313,52 +300,40 @@ export default function ModelViewerSettings() {
     () => ({
       Reset: button(() => {
         setTransform({
-          posX: D_TRANSFORM.posX,
-          posY: D_TRANSFORM.posY,
-          posZ: D_TRANSFORM.posZ,
-          rotX: D_TRANSFORM.rotX,
-          rotY: D_TRANSFORM.rotY,
-          rotZ: D_TRANSFORM.rotZ,
+          position: D_TRANSFORM.position,
+          rotation: D_TRANSFORM.rotation,
           scale: D_TRANSFORM.scale,
-          autoRotateEnabled: D_AUTO_ROTATE.enabled,
-          autoRotateSpeed: D_AUTO_ROTATE.speed,
-          autoRotateAxis: D_AUTO_ROTATE.axis,
         });
       }),
-      posX: { value: D_TRANSFORM.posX, step: 0.01 },
-      posY: { value: D_TRANSFORM.posY, step: 0.01 },
-      posZ: { value: D_TRANSFORM.posZ, step: 0.01 },
-      rotX: { value: D_TRANSFORM.rotX, step: 0.01 },
-      rotY: { value: D_TRANSFORM.rotY, step: 0.01 },
-      rotZ: { value: D_TRANSFORM.rotZ, step: 0.01 },
-      scale: { value: D_TRANSFORM.scale, step: 0.01 },
-      "Auto Rotate": folder(
-        {
-          autoRotateEnabled: D_AUTO_ROTATE.enabled,
-          autoRotateSpeed: {
-            value: D_AUTO_ROTATE.speed,
-            min: 0.1,
-            max: 20,
-            step: 0.1,
-          },
-          autoRotateAxis: {
-            options: ["x", "y", "z"],
-            value: D_AUTO_ROTATE.axis,
-          },
+      position: {
+        value: {
+          x: D_TRANSFORM.position.x,
+          y: D_TRANSFORM.position.y,
+          z: D_TRANSFORM.position.z,
         },
-        { collapsed: true },
-      ),
+        step: 0.01,
+      },
+      rotation: {
+        value: {
+          x: D_TRANSFORM.rotation.x,
+          y: D_TRANSFORM.rotation.y,
+          z: D_TRANSFORM.rotation.z,
+        },
+        step: 0.01,
+      },
+      scale: {
+        value: {
+          x: D_TRANSFORM.scale.x,
+          y: D_TRANSFORM.scale.y,
+          z: D_TRANSFORM.scale.z,
+        },
+        step: 0.01,
+        lock: true,
+      },
     }),
     { collapsed: true },
   );
-
   setters.current.setTransform = setTransform;
-
-  const autoRotate = {
-    enabled: transform.autoRotateEnabled,
-    speed: transform.autoRotateSpeed,
-    axis: transform.autoRotateAxis as "x" | "y" | "z",
-  };
 
   const [camera, setCamera] = useControls(
     "Camera",
@@ -378,20 +353,32 @@ export default function ModelViewerSettings() {
           maxDistance: D_CAMERA.maxDistance,
           minPolarAngle: D_CAMERA.minPolarAngle,
           maxPolarAngle: D_CAMERA.maxPolarAngle,
-          posX: D_CAMERA.posX,
-          posY: D_CAMERA.posY,
-          posZ: D_CAMERA.posZ,
-          targetX: D_CAMERA.targetX,
-          targetY: D_CAMERA.targetY,
-          targetZ: D_CAMERA.targetZ,
+          position: D_CAMERA.position,
+          target: D_CAMERA.target,
         });
       }),
-      fov: { value: D_CAMERA.fov, min: 1, max: 120, step: 1 },
-      near: { value: D_CAMERA.near, min: 0.0001, step: 0.001 },
-      far: { value: D_CAMERA.far, min: 1, step: 10 },
       orbitEnabled: D_CAMERA.orbitEnabled,
       enablePan: D_CAMERA.enablePan,
       enableZoom: D_CAMERA.enableZoom,
+      fov: { value: D_CAMERA.fov, min: 1, max: 160, step: 1 },
+      near: { value: D_CAMERA.near, min: 0.0001, step: 0.001 },
+      far: { value: D_CAMERA.far, min: 1, step: 10 },
+      position: {
+        value: {
+          x: D_CAMERA.position.x,
+          y: D_CAMERA.position.y,
+          z: D_CAMERA.position.z,
+        },
+        step: 0.001,
+      },
+      target: {
+        value: {
+          x: D_CAMERA.target.x,
+          y: D_CAMERA.target.y,
+          z: D_CAMERA.target.z,
+        },
+        step: 0.001,
+      },
       autoRotateOrbit: D_CAMERA.autoRotateOrbit,
       autoRotateOrbitSpeed: {
         value: D_CAMERA.autoRotateOrbitSpeed,
@@ -424,12 +411,6 @@ export default function ModelViewerSettings() {
         max: 180,
         step: 0.1,
       },
-      posX: { value: D_CAMERA.posX, min: -20, max: 20, step: 0.001 },
-      posY: { value: D_CAMERA.posY, min: -20, max: 20, step: 0.001 },
-      posZ: { value: D_CAMERA.posZ, min: -20, max: 20, step: 0.001 },
-      targetX: { value: D_CAMERA.targetX, min: -10, max: 10, step: 0.001 },
-      targetY: { value: D_CAMERA.targetY, min: -10, max: 10, step: 0.001 },
-      targetZ: { value: D_CAMERA.targetZ, min: -10, max: 10, step: 0.001 },
     }),
     { collapsed: true },
   );
@@ -448,11 +429,10 @@ export default function ModelViewerSettings() {
       enabled: D_DOF.enabled,
       focalLength: {
         value: D_DOF.focalLength,
-        min: 0.001,
-        max: 0.1,
-        step: 0.001,
+        min: 0.01,
+        step: 0.01,
       },
-      bokehScale: { value: D_DOF.bokehScale, min: 0, max: 10, step: 0.1 },
+      bokehScale: { value: D_DOF.bokehScale, min: 0, step: 0.1 },
       clearTarget: button(() => setFocusTarget(null)),
     }),
     { collapsed: true },
@@ -470,34 +450,42 @@ export default function ModelViewerSettings() {
           dir1ShowHelper: D_DIR1.showHelper,
           dir1Intensity: D_DIR1.intensity,
           dir1Color: D_DIR1.color,
-          dir1PosX: D_DIR1.posX,
-          dir1PosY: D_DIR1.posY,
-          dir1PosZ: D_DIR1.posZ,
+          dir1Position: {
+            x: D_DIR1.position.x,
+            y: D_DIR1.position.y,
+            z: D_DIR1.position.z,
+          },
           dir1CastShadow: D_DIR1.castShadow,
           dir2Enabled: D_DIR2.enabled,
           dir2ShowHelper: D_DIR2.showHelper,
           dir2Intensity: D_DIR2.intensity,
           dir2Color: D_DIR2.color,
-          dir2PosX: D_DIR2.posX,
-          dir2PosY: D_DIR2.posY,
-          dir2PosZ: D_DIR2.posZ,
+          dir2Position: {
+            x: D_DIR2.position.x,
+            y: D_DIR2.position.y,
+            z: D_DIR2.position.z,
+          },
           dir2CastShadow: D_DIR2.castShadow,
           pointEnabled: D_POINT.enabled,
           pointShowHelper: D_POINT.showHelper,
           pointIntensity: D_POINT.intensity,
           pointColor: D_POINT.color,
-          pointPosX: D_POINT.posX,
-          pointPosY: D_POINT.posY,
-          pointPosZ: D_POINT.posZ,
+          pointPosition: {
+            x: D_POINT.position.x,
+            y: D_POINT.position.y,
+            z: D_POINT.position.z,
+          },
           pointDistance: D_POINT.distance,
           pointDecay: D_POINT.decay,
           spotEnabled: D_SPOT.enabled,
           spotShowHelper: D_SPOT.showHelper,
           spotIntensity: D_SPOT.intensity,
           spotColor: D_SPOT.color,
-          spotPosX: D_SPOT.posX,
-          spotPosY: D_SPOT.posY,
-          spotPosZ: D_SPOT.posZ,
+          spotPosition: {
+            x: D_SPOT.position.x,
+            y: D_SPOT.position.y,
+            z: D_SPOT.position.z,
+          },
           spotAngle: D_SPOT.angle,
           spotPenumbra: D_SPOT.penumbra,
         });
@@ -507,7 +495,6 @@ export default function ModelViewerSettings() {
           ambientIntensity: {
             value: D_AMBIENT.intensity,
             min: 0,
-            max: 5,
             step: 0.05,
           },
           ambientColor: D_AMBIENT.color,
@@ -521,13 +508,17 @@ export default function ModelViewerSettings() {
           dir1Intensity: {
             value: D_DIR1.intensity,
             min: 0,
-            max: 20,
             step: 0.1,
           },
           dir1Color: D_DIR1.color,
-          dir1PosX: { value: D_DIR1.posX, step: 0.001 },
-          dir1PosY: { value: D_DIR1.posY, step: 0.001 },
-          dir1PosZ: { value: D_DIR1.posZ, step: 0.001 },
+          dir1Position: {
+            value: {
+              x: D_DIR1.position.x,
+              y: D_DIR1.position.y,
+              z: D_DIR1.position.z,
+            },
+            step: 0.001,
+          },
           dir1CastShadow: D_DIR1.castShadow,
         },
         { collapsed: true },
@@ -543,9 +534,14 @@ export default function ModelViewerSettings() {
             step: 0.1,
           },
           dir2Color: D_DIR2.color,
-          dir2PosX: { value: D_DIR2.posX, step: 0.001 },
-          dir2PosY: { value: D_DIR2.posY, step: 0.001 },
-          dir2PosZ: { value: D_DIR2.posZ, step: 0.001 },
+          dir2Position: {
+            value: {
+              x: D_DIR2.position.x,
+              y: D_DIR2.position.y,
+              z: D_DIR2.position.z,
+            },
+            step: 0.001,
+          },
           dir2CastShadow: D_DIR2.castShadow,
         },
         { collapsed: true },
@@ -561,9 +557,14 @@ export default function ModelViewerSettings() {
             step: 0.1,
           },
           pointColor: D_POINT.color,
-          pointPosX: { value: D_POINT.posX, step: 0.001 },
-          pointPosY: { value: D_POINT.posY, step: 0.001 },
-          pointPosZ: { value: D_POINT.posZ, step: 0.001 },
+          pointPosition: {
+            value: {
+              x: D_POINT.position.x,
+              y: D_POINT.position.y,
+              z: D_POINT.position.z,
+            },
+            step: 0.001,
+          },
           pointDistance: {
             value: D_POINT.distance,
             min: 0,
@@ -585,9 +586,14 @@ export default function ModelViewerSettings() {
             step: 0.5,
           },
           spotColor: D_SPOT.color,
-          spotPosX: { value: D_SPOT.posX, step: 0.001 },
-          spotPosY: { value: D_SPOT.posY, step: 0.001 },
-          spotPosZ: { value: D_SPOT.posZ, step: 0.001 },
+          spotPosition: {
+            value: {
+              x: D_SPOT.position.x,
+              y: D_SPOT.position.y,
+              z: D_SPOT.position.z,
+            },
+            step: 0.001,
+          },
           spotAngle: {
             value: D_SPOT.angle,
             min: 0,
@@ -612,9 +618,7 @@ export default function ModelViewerSettings() {
     showHelper: lights.dir1ShowHelper,
     intensity: lights.dir1Intensity,
     color: lights.dir1Color,
-    posX: lights.dir1PosX,
-    posY: lights.dir1PosY,
-    posZ: lights.dir1PosZ,
+    position: lights.dir1Position,
     castShadow: lights.dir1CastShadow,
   };
   const dir2: DirectionalLight = {
@@ -622,9 +626,7 @@ export default function ModelViewerSettings() {
     showHelper: lights.dir2ShowHelper,
     intensity: lights.dir2Intensity,
     color: lights.dir2Color,
-    posX: lights.dir2PosX,
-    posY: lights.dir2PosY,
-    posZ: lights.dir2PosZ,
+    position: lights.dir2Position,
     castShadow: lights.dir2CastShadow,
   };
   const point: PointLight = {
@@ -632,9 +634,7 @@ export default function ModelViewerSettings() {
     showHelper: lights.pointShowHelper,
     intensity: lights.pointIntensity,
     color: lights.pointColor,
-    posX: lights.pointPosX,
-    posY: lights.pointPosY,
-    posZ: lights.pointPosZ,
+    position: lights.pointPosition,
     distance: lights.pointDistance,
     decay: lights.pointDecay,
   };
@@ -643,9 +643,7 @@ export default function ModelViewerSettings() {
     showHelper: lights.spotShowHelper,
     intensity: lights.spotIntensity,
     color: lights.spotColor,
-    posX: lights.spotPosX,
-    posY: lights.spotPosY,
-    posZ: lights.spotPosZ,
+    position: lights.spotPosition,
     angle: lights.spotAngle,
     penumbra: lights.spotPenumbra,
   };
@@ -759,14 +757,12 @@ export default function ModelViewerSettings() {
           gridSize: {
             value: D_HELPERS.grid.size,
             min: 0.1,
-            max: 100,
             step: 0.1,
           },
           gridDivisions: {
             value: D_HELPERS.grid.divisions,
-            min: 0.1,
-            max: 100,
-            step: 0.1,
+            min: 1,
+            step: 1,
           },
           gridColor1: D_HELPERS.grid.color1,
           gridColor2: D_HELPERS.grid.color2,
@@ -779,7 +775,6 @@ export default function ModelViewerSettings() {
           axesSize: {
             value: D_HELPERS.axes.size,
             min: 0.1,
-            max: 100,
             step: 0.1,
           },
         },
@@ -790,12 +785,12 @@ export default function ModelViewerSettings() {
           gizmoEnabled: D_HELPERS.gizmo.enabled,
           gizmoAlignment: {
             options: [
-              "top-left",
               "top-right",
-              "bottom-left",
+              "top-center",
+              "top-left",
               "bottom-right",
               "bottom-center",
-              "top-center",
+              "bottom-left",
             ],
             value: D_HELPERS.gizmo.alignment,
           },
@@ -842,6 +837,9 @@ export default function ModelViewerSettings() {
     <div className="fixed inset-0 flex bg-zinc-950 overflow-hidden">
       <div className="flex-1 relative">
         <Leva
+          titleBar={{
+            title: "Settings",
+          }}
           theme={{
             sizes: {
               rootWidth: "480px",
@@ -853,7 +851,11 @@ export default function ModelViewerSettings() {
           <Canvas
             style={{ position: "relative" }}
             camera={{
-              position: [D_CAMERA.posX, D_CAMERA.posY, D_CAMERA.posZ],
+              position: [
+                D_CAMERA.position.x,
+                D_CAMERA.position.y,
+                D_CAMERA.position.z,
+              ],
               fov: D_CAMERA.fov,
               near: D_CAMERA.near,
               far: D_CAMERA.far,
@@ -895,7 +897,6 @@ export default function ModelViewerSettings() {
                 <Model
                   url={activeModelUrl}
                   transform={transform}
-                  autoRotate={autoRotate}
                   renderConfig={renderConfig}
                   materialConfig={material}
                   onModelClick={(point) => setFocusTarget(point)}
@@ -940,20 +941,16 @@ export default function ModelViewerSettings() {
                     const tgt = target.target;
 
                     if (
-                      Math.abs(camera.posX - pos.x) > 0.01 ||
-                      Math.abs(camera.posY - pos.y) > 0.01 ||
-                      Math.abs(camera.posZ - pos.z) > 0.01 ||
-                      Math.abs(camera.targetX - tgt.x) > 0.01 ||
-                      Math.abs(camera.targetY - tgt.y) > 0.01 ||
-                      Math.abs(camera.targetZ - tgt.z) > 0.01
+                      Math.abs(camera.position.x - pos.x) > 0.01 ||
+                      Math.abs(camera.position.y - pos.y) > 0.01 ||
+                      Math.abs(camera.position.z - pos.z) > 0.01 ||
+                      Math.abs(camera.target.x - tgt.x) > 0.01 ||
+                      Math.abs(camera.target.y - tgt.y) > 0.01 ||
+                      Math.abs(camera.target.z - tgt.z) > 0.01
                     ) {
                       setCamera({
-                        posX: pos.x,
-                        posY: pos.y,
-                        posZ: pos.z,
-                        targetX: tgt.x,
-                        targetY: tgt.y,
-                        targetZ: tgt.z,
+                        position: { x: pos.x, y: pos.y, z: pos.z },
+                        target: { x: tgt.x, y: tgt.y, z: tgt.z },
                       });
                     }
                   }

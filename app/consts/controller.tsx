@@ -1,6 +1,5 @@
 import {
   Transform,
-  AutoRotate,
   AmbientLight,
   DirectionalLight,
   PointLight,
@@ -14,86 +13,17 @@ import {
 } from "@/types/controller";
 
 export const D_TRANSFORM: Transform = {
-  posX: 0,
-  posY: 0,
-  posZ: 0.02,
-  rotX: 90,
-  rotY: 0,
-  rotZ: 0,
-  scale: 1,
-};
-
-export const D_AUTO_ROTATE: AutoRotate = {
-  enabled: false,
-  speed: 1,
-  axis: "y",
-};
-
-export const D_AMBIENT: AmbientLight = { intensity: 0.8, color: "#ffffff" };
-
-export const D_DIR1: DirectionalLight = {
-  enabled: true,
-  intensity: 2,
-  color: "#ffffff",
-  posX: 4,
-  posY: 6,
-  posZ: 4,
-  castShadow: false,
-  showHelper: false,
-};
-
-export const D_DIR2: DirectionalLight = {
-  enabled: false,
-  intensity: 1,
-  color: "#4488ff",
-  posX: -4,
-  posY: 2,
-  posZ: -4,
-  castShadow: false,
-  showHelper: false,
-};
-
-export const D_POINT: PointLight = {
-  enabled: false,
-  intensity: 3,
-  color: "#ffaa44",
-  posX: 0,
-  posY: 2,
-  posZ: 0,
-  distance: 10,
-  decay: 2,
-  showHelper: false,
-};
-
-export const D_SPOT: SpotLight = {
-  enabled: false,
-  intensity: 5,
-  color: "#ffffff",
-  posX: 0,
-  posY: 5,
-  posZ: 2,
-  angle: 0.4,
-  penumbra: 0.2,
-  showHelper: false,
-};
-
-export const D_ENV: EnvConfig = {
-  preset: "city",
-  showBackground: true,
-  backgroundBlur: 0,
-  envIntensity: 1,
+  position: { x: 0, y: 0, z: 0 },
+  rotation: { x: 0, y: 0, z: 0 },
+  scale: { x: 1, y: 1, z: 1 },
 };
 
 export const D_CAMERA: CameraConfig = {
   fov: 45,
   near: 0.001,
   far: 1000,
-  posX: 0,
-  posY: 0,
-  posZ: 0.5,
-  targetX: 0,
-  targetY: 0,
-  targetZ: 0,
+  position: { x: 0, y: 0, z: 0.5 },
+  target: { x: 0, y: 0, z: 0 },
   orbitEnabled: true,
   minDistance: 0.001,
   maxDistance: 100,
@@ -108,8 +38,55 @@ export const D_CAMERA: CameraConfig = {
 
 export const D_DOF: DOFConfig = {
   enabled: false,
-  focalLength: 0.02, // Controls how deep the in-focus area is
-  bokehScale: 2, // Controls the intensity of the blur
+  focalLength: 0.1, // Controls how deep the in-focus area is
+  bokehScale: 5, // Controls the intensity of the blur
+};
+
+export const D_AMBIENT: AmbientLight = { intensity: 1, color: "#ffffff" };
+
+export const D_DIR1: DirectionalLight = {
+  enabled: true,
+  showHelper: true,
+  intensity: 0.5,
+  color: "#ffffff",
+  position: { x: 1, y: 1, z: 1 },
+  castShadow: false,
+};
+
+export const D_DIR2: DirectionalLight = {
+  enabled: false,
+  intensity: 1,
+  color: "#4488ff",
+  position: { x: -4, y: 2, z: -4 },
+  castShadow: false,
+  showHelper: false,
+};
+
+export const D_POINT: PointLight = {
+  enabled: false,
+  intensity: 3,
+  color: "#ffaa44",
+  position: { x: 0, y: 2, z: 0 },
+  distance: 10,
+  decay: 2,
+  showHelper: false,
+};
+
+export const D_SPOT: SpotLight = {
+  enabled: false,
+  intensity: 5,
+  color: "#ffffff",
+  position: { x: 0, y: 5, z: 2 },
+  angle: 0.4,
+  penumbra: 0.2,
+  showHelper: false,
+};
+
+export const D_ENV: EnvConfig = {
+  preset: "city",
+  showBackground: true,
+  backgroundBlur: 0,
+  envIntensity: 1,
 };
 
 export const D_RENDER: RenderConfig = {
@@ -159,17 +136,17 @@ export const TONE_MAPS = [
 export const D_HELPERS: HelpersConfig = {
   grid: {
     enabled: false,
-    size: 10,
+    size: 1,
     divisions: 10,
-    color1: "#444444",
-    color2: "#888888",
+    color1: "#888888",
+    color2: "#444444",
   },
   axes: {
     enabled: false,
-    size: 5,
+    size: 2,
   },
   gizmo: {
-    enabled: false,
+    enabled: true,
     alignment: "bottom-right",
     margin: [80, 80],
     type: "viewcube",

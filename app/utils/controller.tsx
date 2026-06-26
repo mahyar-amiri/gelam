@@ -41,25 +41,33 @@ export function CameraController({
 
   useEffect(() => {
     const posDiff =
-      Math.abs(camera.position.x - config.posX) +
-      Math.abs(camera.position.y - config.posY) +
-      Math.abs(camera.position.z - config.posZ);
+      Math.abs(camera.position.x - config.position.x) +
+      Math.abs(camera.position.y - config.position.y) +
+      Math.abs(camera.position.z - config.position.z);
     const tgtDiff = orbitControlsRef?.current
-      ? Math.abs(orbitControlsRef.current.target.x - config.targetX) +
-        Math.abs(orbitControlsRef.current.target.y - config.targetY) +
-        Math.abs(orbitControlsRef.current.target.z - config.targetZ)
+      ? Math.abs(orbitControlsRef.current.target.x - config.target.x) +
+        Math.abs(orbitControlsRef.current.target.y - config.target.y) +
+        Math.abs(orbitControlsRef.current.target.z - config.target.z)
       : 0;
 
     if (!config.orbitEnabled) {
-      camera.position.set(config.posX, config.posY, config.posZ);
-      camera.lookAt(config.targetX, config.targetY, config.targetZ);
+      camera.position.set(
+        config.position.x,
+        config.position.y,
+        config.position.z,
+      );
+      camera.lookAt(config.target.x, config.target.y, config.target.z);
     } else {
       if (orbitControlsRef?.current && (posDiff > 0.02 || tgtDiff > 0.02)) {
-        camera.position.set(config.posX, config.posY, config.posZ);
+        camera.position.set(
+          config.position.x,
+          config.position.y,
+          config.position.z,
+        );
         orbitControlsRef.current.target.set(
-          config.targetX,
-          config.targetY,
-          config.targetZ,
+          config.target.x,
+          config.target.y,
+          config.target.z,
         );
         orbitControlsRef.current.update();
       }
@@ -67,12 +75,12 @@ export function CameraController({
   }, [
     camera,
     config.orbitEnabled,
-    config.posX,
-    config.posY,
-    config.posZ,
-    config.targetX,
-    config.targetY,
-    config.targetZ,
+    config.position.x,
+    config.position.y,
+    config.position.z,
+    config.target.x,
+    config.target.y,
+    config.target.z,
     orbitControlsRef,
   ]);
 
@@ -159,33 +167,31 @@ function DirLightWithHelper({
   useHelper(
     light.showHelper ? ref : false,
     THREE.DirectionalLightHelper,
-    1,
+    0.1,
     light.color,
   );
   return (
     <>
       <directionalLight
         ref={ref}
-        position={[light.posX, light.posY, light.posZ]}
+        position={[light.position.x, light.position.y, light.position.z]}
         intensity={light.intensity}
         color={light.color}
         castShadow={renderConfig.shadowsEnabled && light.castShadow}
       />
       <PivotControls
         matrix={new THREE.Matrix4().setPosition(
-          light.posX,
-          light.posY,
-          light.posZ,
+          light.position.x,
+          light.position.y,
+          light.position.z,
         )}
         onDrag={(matrix) => {
           const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
           setLights?.({
-            [`${propPrefix}PosX`]: pos.x,
-            [`${propPrefix}PosY`]: pos.y,
-            [`${propPrefix}PosZ`]: pos.z,
+            [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
           });
         }}
-        scale={0.5}
+        scale={0.25}
         anchor={[0, 0, 0]}
         depthTest={false}
       >
@@ -218,7 +224,7 @@ function PointLightWithHelper({
     <>
       <pointLight
         ref={ref}
-        position={[light.posX, light.posY, light.posZ]}
+        position={[light.position.x, light.position.y, light.position.z]}
         intensity={light.intensity}
         color={light.color}
         distance={light.distance}
@@ -226,16 +232,14 @@ function PointLightWithHelper({
       />
       <PivotControls
         matrix={new THREE.Matrix4().setPosition(
-          light.posX,
-          light.posY,
-          light.posZ,
+          light.position.x,
+          light.position.y,
+          light.position.z,
         )}
         onDrag={(matrix) => {
           const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
           setLights?.({
-            [`${propPrefix}PosX`]: pos.x,
-            [`${propPrefix}PosY`]: pos.y,
-            [`${propPrefix}PosZ`]: pos.z,
+            [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
           });
         }}
         scale={0.5}
@@ -272,7 +276,7 @@ function SpotLightWithHelper({
     <>
       <spotLight
         ref={ref}
-        position={[light.posX, light.posY, light.posZ]}
+        position={[light.position.x, light.position.y, light.position.z]}
         intensity={light.intensity}
         color={light.color}
         angle={light.angle}
@@ -281,16 +285,14 @@ function SpotLightWithHelper({
       />
       <PivotControls
         matrix={new THREE.Matrix4().setPosition(
-          light.posX,
-          light.posY,
-          light.posZ,
+          light.position.x,
+          light.position.y,
+          light.position.z,
         )}
         onDrag={(matrix) => {
           const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
           setLights?.({
-            [`${propPrefix}PosX`]: pos.x,
-            [`${propPrefix}PosY`]: pos.y,
-            [`${propPrefix}PosZ`]: pos.z,
+            [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
           });
         }}
         scale={0.5}
