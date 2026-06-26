@@ -46,11 +46,17 @@ export const D_AMBIENT: AmbientLight = { intensity: 1, color: "#ffffff" };
 
 export const D_DIR1: DirectionalLight = {
   enabled: true,
-  showHelper: true,
   intensity: 0.5,
   color: "#ffffff",
   position: { x: 1, y: 1, z: 1 },
   castShadow: false,
+  customTargetEnabled: false,
+  customTargetPosition: { x: 0, y: 0, z: 0 },
+  showHelper: true,
+  helperSize: 0.2,
+  showPivotControls: true,
+  showSphere: true,
+  sphereScale: 0.1,
 };
 
 export const D_DIR2: DirectionalLight = {
@@ -59,10 +65,16 @@ export const D_DIR2: DirectionalLight = {
   color: "#4488ff",
   position: { x: -4, y: 2, z: -4 },
   castShadow: false,
+  customTargetEnabled: false,
+  customTargetPosition: { x: 0, y: 0, z: 0 },
   showHelper: false,
+  helperSize: 0.2,
+  showPivotControls: true,
+  showSphere: true,
+  sphereScale: 0.1,
 };
 
-export const D_POINT: PointLight = {
+export const D_POINT1: PointLight = {
   enabled: false,
   intensity: 3,
   color: "#ffaa44",
@@ -70,16 +82,54 @@ export const D_POINT: PointLight = {
   distance: 10,
   decay: 2,
   showHelper: false,
+  helperSize: 0.2,
+  showPivotControls: true,
+  showSphere: true,
+  sphereScale: 0.1,
 };
 
-export const D_SPOT: SpotLight = {
+export const D_POINT2: PointLight = {
+  enabled: false,
+  intensity: 2,
+  color: "#ffaa44",
+  position: { x: 2, y: 1, z: 0 },
+  distance: 10,
+  decay: 2,
+  showHelper: false,
+  helperSize: 0.2,
+  showPivotControls: true,
+  showSphere: true,
+  sphereScale: 0.1,
+};
+
+export const D_SPOT1: SpotLight = {
+  enabled: false,
+  intensity: 2,
+  color: "#ffffff",
+  position: { x: 0, y: 5, z: 2 },
+  angle: 0.4,
+  penumbra: 0.2,
+  customTargetEnabled: false,
+  customTargetPosition: { x: 0, y: 0, z: 0 },
+  showHelper: false,
+  showPivotControls: true,
+  showSphere: true,
+  sphereScale: 0.2,
+};
+
+export const D_SPOT2: SpotLight = {
   enabled: false,
   intensity: 5,
   color: "#ffffff",
   position: { x: 0, y: 5, z: 2 },
   angle: 0.4,
   penumbra: 0.2,
+  customTargetEnabled: false,
+  customTargetPosition: { x: 0, y: 0, z: 0 },
   showHelper: false,
+  showPivotControls: true,
+  showSphere: true,
+  sphereScale: 0.2,
 };
 
 export const D_ENV: EnvConfig = {

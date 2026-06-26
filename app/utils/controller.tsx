@@ -157,17 +157,19 @@ function DirLightWithHelper({
   renderConfig,
   setLights,
   propPrefix,
+  modelPosition,
 }: {
   light: DirectionalLight;
   renderConfig: RenderConfig;
   setLights: any;
   propPrefix: string;
+  modelPosition?: { x: number; y: number; z: number };
 }) {
   const ref = useRef<any>(null);
   useHelper(
     light.showHelper ? ref : false,
     THREE.DirectionalLightHelper,
-    0.1,
+    light.helperSize,
     light.color,
   );
 
@@ -189,30 +191,65 @@ function DirLightWithHelper({
         intensity={light.intensity}
         color={light.color}
         castShadow={renderConfig.shadowsEnabled && light.castShadow}
-      />
-      <PivotControls
-        matrix={matrix}
-        onDrag={(m) => {
-          const pos = new THREE.Vector3().setFromMatrixPosition(m);
-          if (
-            Math.abs(pos.x - light.position.x) > 0.01 ||
-            Math.abs(pos.y - light.position.y) > 0.01 ||
-            Math.abs(pos.z - light.position.z) > 0.01
-          ) {
-            setLights?.({
-              [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
-            });
-          }
-        }}
-        scale={0.25}
-        anchor={[0, 0, 0]}
-        depthTest={false}
       >
-        <mesh>
-          <sphereGeometry args={[light.intensity * 0.05, 16, 16]} />
-          <meshBasicMaterial color={light.color} />
-        </mesh>
-      </PivotControls>
+        <object3D
+          attach="target"
+          position={
+            light.customTargetEnabled
+              ? [
+                  light.customTargetPosition.x,
+                  light.customTargetPosition.y,
+                  light.customTargetPosition.z,
+                ]
+              : [
+                  modelPosition?.x || 0,
+                  modelPosition?.y || 0,
+                  modelPosition?.z || 0,
+                ]
+          }
+        />
+      </directionalLight>
+
+      {light.showPivotControls ? (
+        <PivotControls
+          matrix={matrix}
+          onDrag={(m) => {
+            const pos = new THREE.Vector3().setFromMatrixPosition(m);
+            if (
+              Math.abs(pos.x - light.position.x) > 0.01 ||
+              Math.abs(pos.y - light.position.y) > 0.01 ||
+              Math.abs(pos.z - light.position.z) > 0.01
+            ) {
+              setLights?.({
+                [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
+              });
+            }
+          }}
+          scale={0.5}
+          anchor={[0, 0, 0]}
+          depthTest={false}
+        >
+          {light.showSphere && (
+            <mesh>
+              <sphereGeometry
+                args={[light.intensity * light.sphereScale, 16, 16]}
+              />
+              <meshBasicMaterial color={light.color} />
+            </mesh>
+          )}
+        </PivotControls>
+      ) : (
+        light.showSphere && (
+          <mesh
+            position={[light.position.x, light.position.y, light.position.z]}
+          >
+            <sphereGeometry
+              args={[light.intensity * light.sphereScale, 16, 16]}
+            />
+            <meshBasicMaterial color={light.color} />
+          </mesh>
+        )
+      )}
     </>
   );
 }
@@ -230,7 +267,7 @@ function PointLightWithHelper({
   useHelper(
     light.showHelper ? ref : false,
     THREE.PointLightHelper,
-    1,
+    light.helperSize,
     light.color,
   );
 
@@ -254,29 +291,47 @@ function PointLightWithHelper({
         distance={light.distance}
         decay={light.decay}
       />
-      <PivotControls
-        matrix={matrix}
-        onDrag={(m) => {
-          const pos = new THREE.Vector3().setFromMatrixPosition(m);
-          if (
-            Math.abs(pos.x - light.position.x) > 0.01 ||
-            Math.abs(pos.y - light.position.y) > 0.01 ||
-            Math.abs(pos.z - light.position.z) > 0.01
-          ) {
-            setLights?.({
-              [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
-            });
-          }
-        }}
-        scale={0.5}
-        anchor={[0, 0, 0]}
-        depthTest={false}
-      >
-        <mesh>
-          <sphereGeometry args={[light.intensity * 0.05, 16, 16]} />
-          <meshBasicMaterial color={light.color} />
-        </mesh>
-      </PivotControls>
+
+      {light.showPivotControls ? (
+        <PivotControls
+          matrix={matrix}
+          onDrag={(m) => {
+            const pos = new THREE.Vector3().setFromMatrixPosition(m);
+            if (
+              Math.abs(pos.x - light.position.x) > 0.01 ||
+              Math.abs(pos.y - light.position.y) > 0.01 ||
+              Math.abs(pos.z - light.position.z) > 0.01
+            ) {
+              setLights?.({
+                [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
+              });
+            }
+          }}
+          scale={0.5}
+          anchor={[0, 0, 0]}
+          depthTest={false}
+        >
+          {light.showSphere && (
+            <mesh>
+              <sphereGeometry
+                args={[light.intensity * light.sphereScale, 16, 16]}
+              />
+              <meshBasicMaterial color={light.color} />
+            </mesh>
+          )}
+        </PivotControls>
+      ) : (
+        light.showSphere && (
+          <mesh
+            position={[light.position.x, light.position.y, light.position.z]}
+          >
+            <sphereGeometry
+              args={[light.intensity * light.sphereScale, 16, 16]}
+            />
+            <meshBasicMaterial color={light.color} />
+          </mesh>
+        )
+      )}
     </>
   );
 }
@@ -286,11 +341,13 @@ function SpotLightWithHelper({
   renderConfig,
   setLights,
   propPrefix,
+  modelPosition,
 }: {
   light: SpotLight;
   renderConfig: RenderConfig;
   setLights: any;
   propPrefix: string;
+  modelPosition?: { x: number; y: number; z: number };
 }) {
   const ref = useRef<any>(null);
   useHelper(
@@ -319,30 +376,65 @@ function SpotLightWithHelper({
         angle={light.angle}
         penumbra={light.penumbra}
         castShadow={renderConfig.shadowsEnabled}
-      />
-      <PivotControls
-        matrix={matrix}
-        onDrag={(m) => {
-          const pos = new THREE.Vector3().setFromMatrixPosition(m);
-          if (
-            Math.abs(pos.x - light.position.x) > 0.01 ||
-            Math.abs(pos.y - light.position.y) > 0.01 ||
-            Math.abs(pos.z - light.position.z) > 0.01
-          ) {
-            setLights?.({
-              [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
-            });
-          }
-        }}
-        scale={0.5}
-        anchor={[0, 0, 0]}
-        depthTest={false}
       >
-        <mesh>
-          <sphereGeometry args={[light.intensity * 0.05, 16, 16]} />
-          <meshBasicMaterial color={light.color} />
-        </mesh>
-      </PivotControls>
+        <object3D
+          attach="target"
+          position={
+            light.customTargetEnabled
+              ? [
+                  light.customTargetPosition.x,
+                  light.customTargetPosition.y,
+                  light.customTargetPosition.z,
+                ]
+              : [
+                  modelPosition?.x || 0,
+                  modelPosition?.y || 0,
+                  modelPosition?.z || 0,
+                ]
+          }
+        />
+      </spotLight>
+
+      {light.showPivotControls ? (
+        <PivotControls
+          matrix={matrix}
+          onDrag={(m) => {
+            const pos = new THREE.Vector3().setFromMatrixPosition(m);
+            if (
+              Math.abs(pos.x - light.position.x) > 0.01 ||
+              Math.abs(pos.y - light.position.y) > 0.01 ||
+              Math.abs(pos.z - light.position.z) > 0.01
+            ) {
+              setLights?.({
+                [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
+              });
+            }
+          }}
+          scale={0.5}
+          anchor={[0, 0, 0]}
+          depthTest={false}
+        >
+          {light.showSphere && (
+            <mesh>
+              <sphereGeometry
+                args={[light.intensity * light.sphereScale, 16, 16]}
+              />
+              <meshBasicMaterial color={light.color} />
+            </mesh>
+          )}
+        </PivotControls>
+      ) : (
+        light.showSphere && (
+          <mesh
+            position={[light.position.x, light.position.y, light.position.z]}
+          >
+            <sphereGeometry
+              args={[light.intensity * light.sphereScale, 16, 16]}
+            />
+            <meshBasicMaterial color={light.color} />
+          </mesh>
+        )
+      )}
     </>
   );
 }
@@ -351,16 +443,22 @@ export function SceneLights({
   ambient,
   dir1,
   dir2,
-  point,
-  spot,
+  point1,
+  point2,
+  spot1,
+  spot2,
+  modelPosition = { x: 0, y: 0, z: 0 },
   renderConfig,
   setLights,
 }: {
   ambient: AmbientLight;
   dir1: DirectionalLight;
   dir2: DirectionalLight;
-  point: PointLight;
-  spot: SpotLight;
+  point1: PointLight;
+  point2: PointLight;
+  spot1: SpotLight;
+  spot2: SpotLight;
+  modelPosition?: { x: number; y: number; z: number };
   renderConfig: RenderConfig;
   setLights?: any;
 }) {
@@ -374,6 +472,7 @@ export function SceneLights({
           renderConfig={renderConfig}
           setLights={setLights}
           propPrefix="dir1"
+          modelPosition={modelPosition}
         />
       )}
       {dir2.enabled && (
@@ -382,21 +481,39 @@ export function SceneLights({
           renderConfig={renderConfig}
           setLights={setLights}
           propPrefix="dir2"
+          modelPosition={modelPosition}
         />
       )}
-      {point.enabled && (
+      {point1.enabled && (
         <PointLightWithHelper
-          light={point}
+          light={point1}
           setLights={setLights}
-          propPrefix="point"
+          propPrefix="point1"
         />
       )}
-      {spot.enabled && (
+      {point2.enabled && (
+        <PointLightWithHelper
+          light={point2}
+          setLights={setLights}
+          propPrefix="point2"
+        />
+      )}
+      {spot1.enabled && (
         <SpotLightWithHelper
-          light={spot}
+          light={spot1}
           renderConfig={renderConfig}
           setLights={setLights}
-          propPrefix="spot"
+          propPrefix="spot1"
+          modelPosition={modelPosition}
+        />
+      )}
+      {spot2.enabled && (
+        <SpotLightWithHelper
+          light={spot2}
+          renderConfig={renderConfig}
+          setLights={setLights}
+          propPrefix="spot2"
+          modelPosition={modelPosition}
         />
       )}
     </>
