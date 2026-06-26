@@ -12,7 +12,6 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { EffectComposer, DepthOfField } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { useControls, folder, button, Leva } from "leva";
-import { ModelUploaderSection } from "@/components/Controller";
 import {
   CameraController,
   RenderSettings,
@@ -125,8 +124,22 @@ function Model({
 }
 
 export default function ModelViewerSettings() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeModelUrl, setActiveModelUrl] = useState<string | null>(null);
+  const [models, setModels] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const res = await fetch("/api/models");
+        const data = await res.json();
+        if (data.models) setModels(data.models);
+      } catch (e) {
+        console.error("Error fetching models:", e);
+      }
+    };
+    fetchModels();
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("activeModelUrl");
@@ -160,6 +173,42 @@ export default function ModelViewerSettings() {
     ]
       .filter(Boolean)
       .join(", ") || "None";
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/models", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        const newUrl = `/models/${data.name}`;
+
+        // Refresh models list
+        const modelsRes = await fetch("/api/models");
+        const modelsData = await modelsRes.json();
+        if (modelsData.models) {
+          setModels(modelsData.models);
+        }
+
+        // Update active model
+        setActiveModelUrl(newUrl);
+        if (setters.current.setModel) {
+          setters.current.setModel({ modelOptions: newUrl });
+        }
+      }
+    } catch (error) {
+      console.error("Upload failed", error);
+    } finally {
+      if (e.target) e.target.value = ""; // Reset input
+    }
+  };
+
   const [, setGlobalInfo] = useControls(() => ({
     "Selected Model": { value: "None", editable: false },
     "Active Lights": { value: initialActiveLights, editable: false },
@@ -294,6 +343,32 @@ export default function ModelViewerSettings() {
       }
     }),
   }));
+
+  const modelOptionsRecord: Record<string, string> = { "None": "" };
+  models.forEach(m => {
+    modelOptionsRecord[m] = `/models/${m}`;
+  });
+
+  const [modelSettings, setModel] = useControls(
+    "Model",
+    () => ({
+      Upload: button(() => {
+        fileInputRef.current?.click();
+      }),
+      modelOptions: {
+        label: "Select",
+        options: modelOptionsRecord,
+        value: activeModelUrl || "",
+        onChange: (value) => {
+          if (value !== activeModelUrl) {
+            setActiveModelUrl(value || null);
+          }
+        },
+      },
+    }),
+    [models, activeModelUrl]
+  );
+  setters.current.setModel = setModel;
 
   const [transform, setTransform] = useControls(
     "Transform",
@@ -835,6 +910,13 @@ export default function ModelViewerSettings() {
 
   return (
     <div className="fixed inset-0 flex bg-zinc-950 overflow-hidden">
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".glb,.gltf"
+        className="hidden"
+        onChange={handleUpload}
+      />
       <div className="flex-1 relative">
         <Leva
           titleBar={{
@@ -959,61 +1041,6 @@ export default function ModelViewerSettings() {
             )}
           </Canvas>
           <LoadingOverlay />
-        </div>
-
-        {/* Sidebar toggle */}
-        <button
-          onClick={() => setSidebarOpen((s) => !s)}
-          className="absolute top-4 right-4 z-20 flex items-center p-2 rounded-full bg-zinc-900/80 backdrop-blur border border-zinc-700 text-zinc-300 hover:text-blue-400 hover:border-blue-500/40 text-[11px] uppercase tracking-widest transition-colors duration-150 cursor-pointer"
-        >
-          <svg
-            className={`size-3.5 transition-transform duration-300 ${sidebarOpen ? "rotate-0" : "rotate-180"}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
-      </div>
-
-      {/* Sidebar */}
-      <div
-        className={`relative shrink-0 overflow-hidden transition-all duration-300 ease-in-out
-          ${sidebarOpen ? "w-60 pointer-events-auto" : "w-0 pointer-events-none"}
-        `}
-      >
-        <div
-          className="size-full flex flex-col bg-zinc-900 border-l border-zinc-800 scrollbar-thin"
-          style={{
-            scrollbarColor: "#3f3f46 transparent",
-          }}
-        >
-          {/* Header */}
-          <div className="px-4 py-3 border-b border-zinc-800 shrink-0 flex items-center justify-between">
-            <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
-              Model Settings
-            </p>
-          </div>
-
-          {/* Scrollable body */}
-          <div
-            className="flex-1 overflow-y-auto py-1"
-            style={{
-              scrollbarWidth: "thin",
-              scrollbarColor: "#3f3f46 transparent",
-            }}
-          >
-            <ModelUploaderSection
-              selectedModel={activeModelUrl || ""}
-              onSelectModel={setActiveModelUrl}
-            />
-          </div>
         </div>
       </div>
     </div>
