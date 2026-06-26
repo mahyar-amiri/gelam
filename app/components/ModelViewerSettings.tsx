@@ -32,8 +32,10 @@ import {
   D_AMBIENT,
   D_DIR1,
   D_DIR2,
-  D_POINT,
-  D_SPOT,
+  D_POINT1,
+  D_POINT2,
+  D_SPOT1,
+  D_SPOT2,
   D_ENV,
   D_CAMERA,
   D_DOF,
@@ -265,28 +267,28 @@ export default function ModelViewerSettings() {
             z: D_DIR2.position.z,
           },
           dir2CastShadow: D_DIR2.castShadow,
-          pointEnabled: D_POINT.enabled,
-          pointShowHelper: D_POINT.showHelper,
-          pointIntensity: D_POINT.intensity,
-          pointColor: D_POINT.color,
+          pointEnabled: D_POINT1.enabled,
+          pointShowHelper: D_POINT1.showHelper,
+          pointIntensity: D_POINT1.intensity,
+          pointColor: D_POINT1.color,
           pointPosition: {
-            x: D_POINT.position.x,
-            y: D_POINT.position.y,
-            z: D_POINT.position.z,
+            x: D_POINT1.position.x,
+            y: D_POINT1.position.y,
+            z: D_POINT1.position.z,
           },
-          pointDistance: D_POINT.distance,
-          pointDecay: D_POINT.decay,
-          spotEnabled: D_SPOT.enabled,
-          spotShowHelper: D_SPOT.showHelper,
-          spotIntensity: D_SPOT.intensity,
-          spotColor: D_SPOT.color,
+          pointDistance: D_POINT1.distance,
+          pointDecay: D_POINT1.decay,
+          spotEnabled: D_SPOT1.enabled,
+          spotShowHelper: D_SPOT1.showHelper,
+          spotIntensity: D_SPOT1.intensity,
+          spotColor: D_SPOT1.color,
           spotPosition: {
-            x: D_SPOT.position.x,
-            y: D_SPOT.position.y,
-            z: D_SPOT.position.z,
+            x: D_SPOT1.position.x,
+            y: D_SPOT1.position.y,
+            z: D_SPOT1.position.z,
           },
-          spotAngle: D_SPOT.angle,
-          spotPenumbra: D_SPOT.penumbra,
+          spotAngle: D_SPOT1.angle,
+          spotPenumbra: D_SPOT1.penumbra,
         });
       }
       if (setters.current.setEnv) {
@@ -534,6 +536,12 @@ export default function ModelViewerSettings() {
           ambientColor: D_AMBIENT.color,
           dir1Enabled: D_DIR1.enabled,
           dir1ShowHelper: D_DIR1.showHelper,
+          dir1HelperSize: D_DIR1.helperSize,
+          dir1ShowPivotControls: D_DIR1.showPivotControls,
+          dir1ShowSphere: D_DIR1.showSphere,
+          dir1SphereScale: D_DIR1.sphereScale,
+          dir1CustomTargetEnabled: D_DIR1.customTargetEnabled,
+          dir1CustomTargetPosition: { x: D_DIR1.customTargetPosition.x, y: D_DIR1.customTargetPosition.y, z: D_DIR1.customTargetPosition.z },
           dir1Intensity: D_DIR1.intensity,
           dir1Color: D_DIR1.color,
           dir1Position: {
@@ -544,6 +552,12 @@ export default function ModelViewerSettings() {
           dir1CastShadow: D_DIR1.castShadow,
           dir2Enabled: D_DIR2.enabled,
           dir2ShowHelper: D_DIR2.showHelper,
+          dir2HelperSize: D_DIR2.helperSize,
+          dir2ShowPivotControls: D_DIR2.showPivotControls,
+          dir2ShowSphere: D_DIR2.showSphere,
+          dir2SphereScale: D_DIR2.sphereScale,
+          dir2CustomTargetEnabled: D_DIR2.customTargetEnabled,
+          dir2CustomTargetPosition: { x: D_DIR2.customTargetPosition.x, y: D_DIR2.customTargetPosition.y, z: D_DIR2.customTargetPosition.z },
           dir2Intensity: D_DIR2.intensity,
           dir2Color: D_DIR2.color,
           dir2Position: {
@@ -552,28 +566,68 @@ export default function ModelViewerSettings() {
             z: D_DIR2.position.z,
           },
           dir2CastShadow: D_DIR2.castShadow,
-          pointEnabled: D_POINT.enabled,
-          pointShowHelper: D_POINT.showHelper,
-          pointIntensity: D_POINT.intensity,
-          pointColor: D_POINT.color,
-          pointPosition: {
-            x: D_POINT.position.x,
-            y: D_POINT.position.y,
-            z: D_POINT.position.z,
+          point1Enabled: D_POINT1.enabled,
+          point1ShowHelper: D_POINT1.showHelper,
+          point1HelperSize: D_POINT1.helperSize,
+          point1ShowPivotControls: D_POINT1.showPivotControls,
+          point1ShowSphere: D_POINT1.showSphere,
+          point1SphereScale: D_POINT1.sphereScale,
+          point1Intensity: D_POINT1.intensity,
+          point1Color: D_POINT1.color,
+          point1Position: {
+            x: D_POINT1.position.x,
+            y: D_POINT1.position.y,
+            z: D_POINT1.position.z,
           },
-          pointDistance: D_POINT.distance,
-          pointDecay: D_POINT.decay,
-          spotEnabled: D_SPOT.enabled,
-          spotShowHelper: D_SPOT.showHelper,
-          spotIntensity: D_SPOT.intensity,
-          spotColor: D_SPOT.color,
-          spotPosition: {
-            x: D_SPOT.position.x,
-            y: D_SPOT.position.y,
-            z: D_SPOT.position.z,
+          point1Distance: D_POINT1.distance,
+          point1Decay: D_POINT1.decay,
+          point2Enabled: D_POINT2.enabled,
+          point2ShowHelper: D_POINT2.showHelper,
+          point2HelperSize: D_POINT2.helperSize,
+          point2ShowPivotControls: D_POINT2.showPivotControls,
+          point2ShowSphere: D_POINT2.showSphere,
+          point2SphereScale: D_POINT2.sphereScale,
+          point2Intensity: D_POINT2.intensity,
+          point2Color: D_POINT2.color,
+          point2Position: {
+            x: D_POINT2.position.x,
+            y: D_POINT2.position.y,
+            z: D_POINT2.position.z,
           },
-          spotAngle: D_SPOT.angle,
-          spotPenumbra: D_SPOT.penumbra,
+          point2Distance: D_POINT2.distance,
+          point2Decay: D_POINT2.decay,
+          spot1Enabled: D_SPOT1.enabled,
+          spot1ShowHelper: D_SPOT1.showHelper,
+          spot1ShowPivotControls: D_SPOT1.showPivotControls,
+          spot1ShowSphere: D_SPOT1.showSphere,
+          spot1SphereScale: D_SPOT1.sphereScale,
+          spot1CustomTargetEnabled: D_SPOT1.customTargetEnabled,
+          spot1CustomTargetPosition: { x: D_SPOT1.customTargetPosition.x, y: D_SPOT1.customTargetPosition.y, z: D_SPOT1.customTargetPosition.z },
+          spot1Intensity: D_SPOT1.intensity,
+          spot1Color: D_SPOT1.color,
+          spot1Position: {
+            x: D_SPOT1.position.x,
+            y: D_SPOT1.position.y,
+            z: D_SPOT1.position.z,
+          },
+          spot1Angle: D_SPOT1.angle,
+          spot1Penumbra: D_SPOT1.penumbra,
+          spot2Enabled: D_SPOT2.enabled,
+          spot2ShowHelper: D_SPOT2.showHelper,
+          spot2ShowPivotControls: D_SPOT2.showPivotControls,
+          spot2ShowSphere: D_SPOT2.showSphere,
+          spot2SphereScale: D_SPOT2.sphereScale,
+          spot2CustomTargetEnabled: D_SPOT2.customTargetEnabled,
+          spot2CustomTargetPosition: { x: D_SPOT2.customTargetPosition.x, y: D_SPOT2.customTargetPosition.y, z: D_SPOT2.customTargetPosition.z },
+          spot2Intensity: D_SPOT2.intensity,
+          spot2Color: D_SPOT2.color,
+          spot2Position: {
+            x: D_SPOT2.position.x,
+            y: D_SPOT2.position.y,
+            z: D_SPOT2.position.z,
+          },
+          spot2Angle: D_SPOT2.angle,
+          spot2Penumbra: D_SPOT2.penumbra,
         });
       }),
       "Ambient Light": folder(
@@ -591,6 +645,24 @@ export default function ModelViewerSettings() {
         {
           dir1Enabled: D_DIR1.enabled,
           dir1ShowHelper: D_DIR1.showHelper,
+          dir1HelperSize: { value: D_DIR1.helperSize, min: 0.1, step: 0.1 },
+          "Dir 1 Controller": folder(
+            {
+              dir1ShowPivotControls: D_DIR1.showPivotControls,
+              dir1ShowSphere: D_DIR1.showSphere,
+              dir1SphereScale: { value: D_DIR1.sphereScale, min: 0.01, max: 1, step: 0.01 },
+            },
+            { collapsed: true }
+          ),
+          dir1CustomTargetEnabled: D_DIR1.customTargetEnabled,
+          dir1CustomTargetPosition: {
+            value: {
+              x: D_DIR1.customTargetPosition.x,
+              y: D_DIR1.customTargetPosition.y,
+              z: D_DIR1.customTargetPosition.z,
+            },
+            step: 0.01,
+          },
           dir1Intensity: {
             value: D_DIR1.intensity,
             min: 0,
@@ -613,6 +685,24 @@ export default function ModelViewerSettings() {
         {
           dir2Enabled: D_DIR2.enabled,
           dir2ShowHelper: D_DIR2.showHelper,
+          dir2HelperSize: { value: D_DIR2.helperSize, min: 0.1, step: 0.1 },
+          "Dir 2 Controller": folder(
+            {
+              dir2ShowPivotControls: D_DIR2.showPivotControls,
+              dir2ShowSphere: D_DIR2.showSphere,
+              dir2SphereScale: { value: D_DIR2.sphereScale, min: 0.01, max: 1, step: 0.01 },
+            },
+            { collapsed: true }
+          ),
+          dir2CustomTargetEnabled: D_DIR2.customTargetEnabled,
+          dir2CustomTargetPosition: {
+            value: {
+              x: D_DIR2.customTargetPosition.x,
+              y: D_DIR2.customTargetPosition.y,
+              z: D_DIR2.customTargetPosition.z,
+            },
+            step: 0.01,
+          },
           dir2Intensity: {
             value: D_DIR2.intensity,
             min: 0,
@@ -632,61 +722,171 @@ export default function ModelViewerSettings() {
         },
         { collapsed: true },
       ),
-      "Point Light": folder(
+      "Point Light 1": folder(
         {
-          pointEnabled: D_POINT.enabled,
-          pointShowHelper: D_POINT.showHelper,
-          pointIntensity: {
-            value: D_POINT.intensity,
+          point1Enabled: D_POINT1.enabled,
+          point1ShowHelper: D_POINT1.showHelper,
+          point1HelperSize: { value: D_POINT1.helperSize, min: 0.1, step: 0.1 },
+          "Point 1 Controller": folder(
+            {
+              point1ShowPivotControls: D_POINT1.showPivotControls,
+              point1ShowSphere: D_POINT1.showSphere,
+              point1SphereScale: { value: D_POINT1.sphereScale, min: 0.01, max: 1, step: 0.01 },
+            },
+            { collapsed: true }
+          ),
+          point1Intensity: {
+            value: D_POINT1.intensity,
             min: 0,
             max: 20,
             step: 0.1,
           },
-          pointColor: D_POINT.color,
-          pointPosition: {
+          point1Color: D_POINT1.color,
+          point1Position: {
             value: {
-              x: D_POINT.position.x,
-              y: D_POINT.position.y,
-              z: D_POINT.position.z,
+              x: D_POINT1.position.x,
+              y: D_POINT1.position.y,
+              z: D_POINT1.position.z,
             },
             step: 0.001,
           },
-          pointDistance: {
-            value: D_POINT.distance,
+          point1Distance: {
+            value: D_POINT1.distance,
             min: 0,
             max: 50,
             step: 0.5,
           },
-          pointDecay: { value: D_POINT.decay, min: 0, max: 5, step: 0.05 },
+          point1Decay: { value: D_POINT1.decay, min: 0, max: 5, step: 0.05 },
         },
         { collapsed: true },
       ),
-      "Spot Light": folder(
+      "Point Light 2": folder(
         {
-          spotEnabled: D_SPOT.enabled,
-          spotShowHelper: D_SPOT.showHelper,
-          spotIntensity: {
-            value: D_SPOT.intensity,
+          point2Enabled: D_POINT2.enabled,
+          point2ShowHelper: D_POINT2.showHelper,
+          point2HelperSize: { value: D_POINT2.helperSize, min: 0.1, step: 0.1 },
+          "Point 2 Controller": folder(
+            {
+              point2ShowPivotControls: D_POINT2.showPivotControls,
+              point2ShowSphere: D_POINT2.showSphere,
+              point2SphereScale: { value: D_POINT2.sphereScale, min: 0.01, max: 1, step: 0.01 },
+            },
+            { collapsed: true }
+          ),
+          point2Intensity: {
+            value: D_POINT2.intensity,
+            min: 0,
+            max: 20,
+            step: 0.1,
+          },
+          point2Color: D_POINT2.color,
+          point2Position: {
+            value: {
+              x: D_POINT2.position.x,
+              y: D_POINT2.position.y,
+              z: D_POINT2.position.z,
+            },
+            step: 0.001,
+          },
+          point2Distance: {
+            value: D_POINT2.distance,
             min: 0,
             max: 50,
             step: 0.5,
           },
-          spotColor: D_SPOT.color,
-          spotPosition: {
+          point2Decay: { value: D_POINT2.decay, min: 0, max: 5, step: 0.05 },
+        },
+        { collapsed: true },
+      ),
+      "Spot Light 1": folder(
+        {
+          spot1Enabled: D_SPOT1.enabled,
+          spot1ShowHelper: D_SPOT1.showHelper,
+          "Spot 1 Controller": folder(
+            {
+              spot1ShowPivotControls: D_SPOT1.showPivotControls,
+              spot1ShowSphere: D_SPOT1.showSphere,
+              spot1SphereScale: { value: D_SPOT1.sphereScale, min: 0.01, max: 1, step: 0.01 },
+            },
+            { collapsed: true }
+          ),
+          spot1CustomTargetEnabled: D_SPOT1.customTargetEnabled,
+          spot1CustomTargetPosition: {
             value: {
-              x: D_SPOT.position.x,
-              y: D_SPOT.position.y,
-              z: D_SPOT.position.z,
+              x: D_SPOT1.customTargetPosition.x,
+              y: D_SPOT1.customTargetPosition.y,
+              z: D_SPOT1.customTargetPosition.z,
+            },
+            step: 0.01,
+          },
+          spot1Intensity: {
+            value: D_SPOT1.intensity,
+            min: 0,
+            max: 50,
+            step: 0.5,
+          },
+          spot1Color: D_SPOT1.color,
+          spot1Position: {
+            value: {
+              x: D_SPOT1.position.x,
+              y: D_SPOT1.position.y,
+              z: D_SPOT1.position.z,
             },
             step: 0.001,
           },
-          spotAngle: {
-            value: D_SPOT.angle,
+          spot1Angle: {
+            value: D_SPOT1.angle,
             min: 0,
             max: Math.PI / 2,
+            step: 0.05,
+          },
+          spot1Penumbra: { value: D_SPOT1.penumbra, min: 0, max: 1, step: 0.05 },
+        },
+        { collapsed: true },
+      ),
+      "Spot Light 2": folder(
+        {
+          spot2Enabled: D_SPOT2.enabled,
+          spot2ShowHelper: D_SPOT2.showHelper,
+          "Spot 2 Controller": folder(
+            {
+              spot2ShowPivotControls: D_SPOT2.showPivotControls,
+              spot2ShowSphere: D_SPOT2.showSphere,
+              spot2SphereScale: { value: D_SPOT2.sphereScale, min: 0.01, max: 1, step: 0.01 },
+            },
+            { collapsed: true }
+          ),
+          spot2CustomTargetEnabled: D_SPOT2.customTargetEnabled,
+          spot2CustomTargetPosition: {
+            value: {
+              x: D_SPOT2.customTargetPosition.x,
+              y: D_SPOT2.customTargetPosition.y,
+              z: D_SPOT2.customTargetPosition.z,
+            },
             step: 0.01,
           },
-          spotPenumbra: { value: D_SPOT.penumbra, min: 0, max: 1, step: 0.01 },
+          spot2Intensity: {
+            value: D_SPOT2.intensity,
+            min: 0,
+            max: 50,
+            step: 0.5,
+          },
+          spot2Color: D_SPOT2.color,
+          spot2Position: {
+            value: {
+              x: D_SPOT2.position.x,
+              y: D_SPOT2.position.y,
+              z: D_SPOT2.position.z,
+            },
+            step: 0.001,
+          },
+          spot2Angle: {
+            value: D_SPOT2.angle,
+            min: 0,
+            max: Math.PI / 2,
+            step: 0.05,
+          },
+          spot2Penumbra: { value: D_SPOT2.penumbra, min: 0, max: 1, step: 0.05 },
         },
         { collapsed: true },
       ),
@@ -702,6 +902,12 @@ export default function ModelViewerSettings() {
   const dir1: DirectionalLight = {
     enabled: lights.dir1Enabled,
     showHelper: lights.dir1ShowHelper,
+    helperSize: lights.dir1HelperSize,
+    showPivotControls: lights.dir1ShowPivotControls,
+    showSphere: lights.dir1ShowSphere,
+    sphereScale: lights.dir1SphereScale,
+    customTargetEnabled: lights.dir1CustomTargetEnabled,
+    customTargetPosition: lights.dir1CustomTargetPosition,
     intensity: lights.dir1Intensity,
     color: lights.dir1Color,
     position: lights.dir1Position,
@@ -710,28 +916,70 @@ export default function ModelViewerSettings() {
   const dir2: DirectionalLight = {
     enabled: lights.dir2Enabled,
     showHelper: lights.dir2ShowHelper,
+    helperSize: lights.dir2HelperSize,
+    showPivotControls: lights.dir2ShowPivotControls,
+    showSphere: lights.dir2ShowSphere,
+    sphereScale: lights.dir2SphereScale,
+    customTargetEnabled: lights.dir2CustomTargetEnabled,
+    customTargetPosition: lights.dir2CustomTargetPosition,
     intensity: lights.dir2Intensity,
     color: lights.dir2Color,
     position: lights.dir2Position,
     castShadow: lights.dir2CastShadow,
   };
-  const point: PointLight = {
-    enabled: lights.pointEnabled,
-    showHelper: lights.pointShowHelper,
-    intensity: lights.pointIntensity,
-    color: lights.pointColor,
-    position: lights.pointPosition,
-    distance: lights.pointDistance,
-    decay: lights.pointDecay,
+  const point1: PointLight = {
+    enabled: lights.point1Enabled,
+    showHelper: lights.point1ShowHelper,
+    helperSize: lights.point1HelperSize,
+    showPivotControls: lights.point1ShowPivotControls,
+    showSphere: lights.point1ShowSphere,
+    sphereScale: lights.point1SphereScale,
+    intensity: lights.point1Intensity,
+    color: lights.point1Color,
+    position: lights.point1Position,
+    distance: lights.point1Distance,
+    decay: lights.point1Decay,
   };
-  const spot: SpotLight = {
-    enabled: lights.spotEnabled,
-    showHelper: lights.spotShowHelper,
-    intensity: lights.spotIntensity,
-    color: lights.spotColor,
-    position: lights.spotPosition,
-    angle: lights.spotAngle,
-    penumbra: lights.spotPenumbra,
+  const point2: PointLight = {
+    enabled: lights.point2Enabled,
+    showHelper: lights.point2ShowHelper,
+    helperSize: lights.point2HelperSize,
+    showPivotControls: lights.point2ShowPivotControls,
+    showSphere: lights.point2ShowSphere,
+    sphereScale: lights.point2SphereScale,
+    intensity: lights.point2Intensity,
+    color: lights.point2Color,
+    position: lights.point2Position,
+    distance: lights.point2Distance,
+    decay: lights.point2Decay,
+  };
+  const spot1: SpotLight = {
+    enabled: lights.spot1Enabled,
+    showHelper: lights.spot1ShowHelper,
+    showPivotControls: lights.spot1ShowPivotControls,
+    showSphere: lights.spot1ShowSphere,
+    sphereScale: lights.spot1SphereScale,
+    customTargetEnabled: lights.spot1CustomTargetEnabled,
+    customTargetPosition: lights.spot1CustomTargetPosition,
+    intensity: lights.spot1Intensity,
+    color: lights.spot1Color,
+    position: lights.spot1Position,
+    angle: lights.spot1Angle,
+    penumbra: lights.spot1Penumbra,
+  };
+  const spot2: SpotLight = {
+    enabled: lights.spot2Enabled,
+    showHelper: lights.spot2ShowHelper,
+    showPivotControls: lights.spot2ShowPivotControls,
+    showSphere: lights.spot2ShowSphere,
+    sphereScale: lights.spot2SphereScale,
+    customTargetEnabled: lights.spot2CustomTargetEnabled,
+    customTargetPosition: lights.spot2CustomTargetPosition,
+    intensity: lights.spot2Intensity,
+    color: lights.spot2Color,
+    position: lights.spot2Position,
+    angle: lights.spot2Angle,
+    penumbra: lights.spot2Penumbra,
   };
 
   const [env, setEnv] = useControls(
@@ -962,10 +1210,13 @@ export default function ModelViewerSettings() {
               ambient={ambient}
               dir1={dir1}
               dir2={dir2}
-              point={point}
-              spot={spot}
+              point1={point1}
+              point2={point2}
+              spot1={spot1}
+              spot2={spot2}
               renderConfig={renderConfig}
               setLights={setLights}
+              modelPosition={{x: transform.position.x, y: transform.position.y, z: transform.position.z}}
             />
             <Suspense fallback={null}>
               {activeModelUrl && (
