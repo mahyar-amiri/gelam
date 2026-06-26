@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
@@ -170,6 +170,17 @@ function DirLightWithHelper({
     0.1,
     light.color,
   );
+
+  const matrix = useMemo(
+    () =>
+      new THREE.Matrix4().setPosition(
+        light.position.x,
+        light.position.y,
+        light.position.z,
+      ),
+    [light.position.x, light.position.y, light.position.z],
+  );
+
   return (
     <>
       <directionalLight
@@ -180,16 +191,18 @@ function DirLightWithHelper({
         castShadow={renderConfig.shadowsEnabled && light.castShadow}
       />
       <PivotControls
-        matrix={new THREE.Matrix4().setPosition(
-          light.position.x,
-          light.position.y,
-          light.position.z,
-        )}
-        onDrag={(matrix) => {
-          const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
-          setLights?.({
-            [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
-          });
+        matrix={matrix}
+        onDrag={(m) => {
+          const pos = new THREE.Vector3().setFromMatrixPosition(m);
+          if (
+            Math.abs(pos.x - light.position.x) > 0.01 ||
+            Math.abs(pos.y - light.position.y) > 0.01 ||
+            Math.abs(pos.z - light.position.z) > 0.01
+          ) {
+            setLights?.({
+              [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
+            });
+          }
         }}
         scale={0.25}
         anchor={[0, 0, 0]}
@@ -220,6 +233,17 @@ function PointLightWithHelper({
     1,
     light.color,
   );
+
+  const matrix = useMemo(
+    () =>
+      new THREE.Matrix4().setPosition(
+        light.position.x,
+        light.position.y,
+        light.position.z,
+      ),
+    [light.position.x, light.position.y, light.position.z],
+  );
+
   return (
     <>
       <pointLight
@@ -231,16 +255,18 @@ function PointLightWithHelper({
         decay={light.decay}
       />
       <PivotControls
-        matrix={new THREE.Matrix4().setPosition(
-          light.position.x,
-          light.position.y,
-          light.position.z,
-        )}
-        onDrag={(matrix) => {
-          const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
-          setLights?.({
-            [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
-          });
+        matrix={matrix}
+        onDrag={(m) => {
+          const pos = new THREE.Vector3().setFromMatrixPosition(m);
+          if (
+            Math.abs(pos.x - light.position.x) > 0.01 ||
+            Math.abs(pos.y - light.position.y) > 0.01 ||
+            Math.abs(pos.z - light.position.z) > 0.01
+          ) {
+            setLights?.({
+              [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
+            });
+          }
         }}
         scale={0.5}
         anchor={[0, 0, 0]}
@@ -272,6 +298,17 @@ function SpotLightWithHelper({
     THREE.SpotLightHelper,
     light.color as any,
   );
+
+  const matrix = useMemo(
+    () =>
+      new THREE.Matrix4().setPosition(
+        light.position.x,
+        light.position.y,
+        light.position.z,
+      ),
+    [light.position.x, light.position.y, light.position.z],
+  );
+
   return (
     <>
       <spotLight
@@ -284,16 +321,18 @@ function SpotLightWithHelper({
         castShadow={renderConfig.shadowsEnabled}
       />
       <PivotControls
-        matrix={new THREE.Matrix4().setPosition(
-          light.position.x,
-          light.position.y,
-          light.position.z,
-        )}
-        onDrag={(matrix) => {
-          const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
-          setLights?.({
-            [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
-          });
+        matrix={matrix}
+        onDrag={(m) => {
+          const pos = new THREE.Vector3().setFromMatrixPosition(m);
+          if (
+            Math.abs(pos.x - light.position.x) > 0.01 ||
+            Math.abs(pos.y - light.position.y) > 0.01 ||
+            Math.abs(pos.z - light.position.z) > 0.01
+          ) {
+            setLights?.({
+              [`${propPrefix}Position`]: { x: pos.x, y: pos.y, z: pos.z },
+            });
+          }
         }}
         scale={0.5}
         anchor={[0, 0, 0]}

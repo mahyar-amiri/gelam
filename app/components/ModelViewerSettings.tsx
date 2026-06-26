@@ -12,7 +12,6 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { EffectComposer, DepthOfField } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { useControls, folder, button, Leva } from "leva";
-import { ModelUploaderSection } from "@/components/Controller";
 import {
   CameraController,
   RenderSettings,
@@ -44,6 +43,9 @@ import {
   TONE_MAPS,
   D_HELPERS,
 } from "@/consts/controller";
+
+const LEVA_TITLE_BAR = { title: "Settings" };
+const LEVA_THEME = { sizes: { rootWidth: "480px" } };
 
 function LoadingOverlay() {
   const { active, progress } = useProgress();
@@ -125,23 +127,41 @@ function Model({
 }
 
 export default function ModelViewerSettings() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeModelUrl, setActiveModelUrl] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [models, setModels] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Fetch Models (Unchanged, just isolated)
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const res = await fetch("/api/models");
+        const data = await res.json();
+        if (data.models) setModels(data.models);
+      } catch (e) {
+        console.error("Error fetching models:", e);
+      }
+    };
+    fetchModels();
+  }, []);
 
+  // Restore Local Storage ONCE
   useEffect(() => {
     const saved = localStorage.getItem("activeModelUrl");
-    if (saved && saved !== activeModelUrl) {
-      setActiveModelUrl(saved);
-    }
-  }, [activeModelUrl]);
+    if (saved) setActiveModelUrl(saved);
+    setIsInitialized(true); // Flag that hydration is complete
+  }, []);
 
+  // Save to Local Storage safely
   useEffect(() => {
+    if (!isInitialized) return; // Prevent saving/wiping during initial load!
+
     if (activeModelUrl) {
       localStorage.setItem("activeModelUrl", activeModelUrl);
     } else {
       localStorage.removeItem("activeModelUrl");
     }
-  }, [activeModelUrl]);
+  }, [activeModelUrl, isInitialized]);
 
   const [focusTarget, setFocusTarget] = useState<THREE.Vector3 | null>(null);
 
@@ -149,21 +169,44 @@ export default function ModelViewerSettings() {
 
   const setters = useRef<any>({});
 
-  // Set up the initial text based on your default constants
-  const initialActiveLights =
-    [
-      D_AMBIENT.intensity > 0 ? "Ambient" : null,
-      D_DIR1.enabled ? "Dir 1" : null,
-      D_DIR2.enabled ? "Dir 2" : null,
-      D_POINT.enabled ? "Point" : null,
-      D_SPOT.enabled ? "Spot" : null,
-    ]
-      .filter(Boolean)
-      .join(", ") || "None";
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/models", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        const newUrl = `/models/${data.name}`;
+
+        // Refresh models list
+        const modelsRes = await fetch("/api/models");
+        const modelsData = await modelsRes.json();
+        if (modelsData.models) {
+          setModels(modelsData.models);
+        }
+
+        // Update active model
+        setActiveModelUrl(newUrl);
+        if (setters.current.setModel) {
+          setters.current.setModel({ modelOptions: newUrl });
+        }
+      }
+    } catch (error) {
+      console.error("Upload failed", error);
+    } finally {
+      if (e.target) e.target.value = ""; // Reset input
+    }
+  };
+
   const [, setGlobalInfo] = useControls(() => ({
     "Selected Model": { value: "None", editable: false },
-    "Active Lights": { value: initialActiveLights, editable: false },
-    // useControls({
     "Reset All": button(() => {
       if (setters.current.setTransform) {
         setters.current.setTransform({
@@ -294,6 +337,49 @@ export default function ModelViewerSettings() {
       }
     }),
   }));
+
+  const modelOptionsRecord: Record<string, string> = { None: "" };
+  if (activeModelUrl) {
+    const modelName = activeModelUrl.startsWith("blob:")
+      ? "Uploaded Local Model"
+      : activeModelUrl.split("/").pop()?.split("?")[0] || "Unknown";
+    modelOptionsRecord[modelName] = activeModelUrl;
+  }
+  models.forEach((m) => {
+    modelOptionsRecord[m] = `/models/${m}`;
+  });
+
+  const [modelSettings, setModel] = useControls(
+    "Model",
+    () => ({
+      Upload: button(() => {
+        fileInputRef.current?.click();
+      }),
+      modelOptions: {
+        label: "Select",
+        options: modelOptionsRecord,
+        value: activeModelUrl || "",
+        onChange: (
+          value: string,
+          path: string,
+          context: { initial: boolean },
+        ) => {
+          if (context.initial) return;
+          setActiveModelUrl(value || null);
+        },
+        transient: false,
+      },
+    }),
+    { collapsed: true },
+    [models, isInitialized],
+  );
+
+  useEffect(() => {
+    if (setters.current.setModel) {
+      setters.current.setModel({ modelOptions: activeModelUrl || "" });
+    }
+  }, [activeModelUrl]);
+  setters.current.setModel = setModel;
 
   const [transform, setTransform] = useControls(
     "Transform",
@@ -818,34 +904,23 @@ export default function ModelViewerSettings() {
       }
     }
 
-    // Determine which lights are currently active
-    const active = [];
-    if (lights.ambientIntensity > 0) active.push("Ambient");
-    if (lights.dir1Enabled) active.push("Dir 1");
-    if (lights.dir2Enabled) active.push("Dir 2");
-    if (lights.pointEnabled) active.push("Point");
-    if (lights.spotEnabled) active.push("Spot");
-
     // Update the top Leva panel
     setGlobalInfo({
       "Selected Model": modelName,
-      "Active Lights": active.length > 0 ? active.join(", ") : "None",
     });
-  }, [activeModelUrl, lights, setGlobalInfo]);
+  }, [activeModelUrl, setGlobalInfo]);
 
   return (
     <div className="fixed inset-0 flex bg-zinc-950 overflow-hidden">
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".glb,.gltf"
+        className="hidden"
+        onChange={handleUpload}
+      />
       <div className="flex-1 relative">
-        <Leva
-          titleBar={{
-            title: "Settings",
-          }}
-          theme={{
-            sizes: {
-              rootWidth: "480px",
-            },
-          }}
-        />
+        <Leva titleBar={LEVA_TITLE_BAR} theme={LEVA_THEME} />
         {/* Canvas */}
         <div className="absolute inset-0">
           <Canvas
@@ -933,13 +1008,12 @@ export default function ModelViewerSettings() {
                 autoRotateSpeed={camera.autoRotateOrbitSpeed}
                 dampingFactor={camera.dampingFactor}
                 enableDamping
-                onChange={(e) => {
+                onEnd={(e) => {
                   if (!e) return;
-                  const target = e.target;
+                  const target = e.target as unknown as OrbitControlsImpl;
                   if (target.object) {
                     const pos = target.object.position;
                     const tgt = target.target;
-
                     if (
                       Math.abs(camera.position.x - pos.x) > 0.01 ||
                       Math.abs(camera.position.y - pos.y) > 0.01 ||
@@ -959,61 +1033,6 @@ export default function ModelViewerSettings() {
             )}
           </Canvas>
           <LoadingOverlay />
-        </div>
-
-        {/* Sidebar toggle */}
-        <button
-          onClick={() => setSidebarOpen((s) => !s)}
-          className="absolute top-4 right-4 z-20 flex items-center p-2 rounded-full bg-zinc-900/80 backdrop-blur border border-zinc-700 text-zinc-300 hover:text-blue-400 hover:border-blue-500/40 text-[11px] uppercase tracking-widest transition-colors duration-150 cursor-pointer"
-        >
-          <svg
-            className={`size-3.5 transition-transform duration-300 ${sidebarOpen ? "rotate-0" : "rotate-180"}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
-      </div>
-
-      {/* Sidebar */}
-      <div
-        className={`relative shrink-0 overflow-hidden transition-all duration-300 ease-in-out
-          ${sidebarOpen ? "w-60 pointer-events-auto" : "w-0 pointer-events-none"}
-        `}
-      >
-        <div
-          className="size-full flex flex-col bg-zinc-900 border-l border-zinc-800 scrollbar-thin"
-          style={{
-            scrollbarColor: "#3f3f46 transparent",
-          }}
-        >
-          {/* Header */}
-          <div className="px-4 py-3 border-b border-zinc-800 shrink-0 flex items-center justify-between">
-            <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
-              Model Settings
-            </p>
-          </div>
-
-          {/* Scrollable body */}
-          <div
-            className="flex-1 overflow-y-auto py-1"
-            style={{
-              scrollbarWidth: "thin",
-              scrollbarColor: "#3f3f46 transparent",
-            }}
-          >
-            <ModelUploaderSection
-              selectedModel={activeModelUrl || ""}
-              onSelectModel={setActiveModelUrl}
-            />
-          </div>
         </div>
       </div>
     </div>
