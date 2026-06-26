@@ -141,14 +141,20 @@ export default function ModelViewerSettings() {
     fetchModels();
   }, []);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("activeModelUrl");
-    if (saved && saved !== activeModelUrl) {
-      setActiveModelUrl(saved);
-    }
-  }, [activeModelUrl]);
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
+    const saved = localStorage.getItem("activeModelUrl");
+    if (saved) {
+      setActiveModelUrl(saved);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     if (activeModelUrl) {
       localStorage.setItem("activeModelUrl", activeModelUrl);
     } else {
@@ -360,14 +366,19 @@ export default function ModelViewerSettings() {
         options: modelOptionsRecord,
         value: activeModelUrl || "",
         onChange: (value) => {
-          if (value !== activeModelUrl) {
-            setActiveModelUrl(value || null);
-          }
+          setActiveModelUrl(value || null);
         },
+        transient: false,
       },
     }),
-    [models, activeModelUrl]
+    [models]
   );
+
+  useEffect(() => {
+    if (setters.current.setModel) {
+      setters.current.setModel({ modelOptions: activeModelUrl || "" });
+    }
+  }, [activeModelUrl]);
   setters.current.setModel = setModel;
 
   const [transform, setTransform] = useControls(
