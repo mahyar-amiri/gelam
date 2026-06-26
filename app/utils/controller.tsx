@@ -225,9 +225,11 @@ function DirLightWithHelper({
               });
             }
           }}
-          scale={0.5}
+          scale={light.intensity * light.sphereScale}
           anchor={[0, 0, 0]}
           depthTest={false}
+          disableScaling
+          disableRotations
         >
           {light.showSphere && (
             <mesh>
@@ -307,9 +309,11 @@ function PointLightWithHelper({
               });
             }
           }}
-          scale={0.5}
+          scale={light.intensity * light.sphereScale}
           anchor={[0, 0, 0]}
           depthTest={false}
+          disableScaling
+          disableRotations
         >
           {light.showSphere && (
             <mesh>
@@ -410,9 +414,11 @@ function SpotLightWithHelper({
               });
             }
           }}
-          scale={0.5}
+          scale={light.intensity * light.sphereScale}
           anchor={[0, 0, 0]}
           depthTest={false}
+          disableScaling
+          disableRotations
         >
           {light.showSphere && (
             <mesh>
