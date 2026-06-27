@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useRef, useState, useEffect } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import {
   Environment,
   useGLTF,
@@ -133,6 +133,8 @@ export default function ModelViewerSettings() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [models, setModels] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
+
   // Fetch Models (Unchanged, just isolated)
   useEffect(() => {
     const fetchModels = async () => {
@@ -147,29 +149,48 @@ export default function ModelViewerSettings() {
     fetchModels();
   }, []);
 
-  // Restore Local Storage ONCE
-  useEffect(() => {
-    const saved = localStorage.getItem("activeModelUrl");
-    if (saved) setActiveModelUrl(saved);
-    setIsInitialized(true); // Flag that hydration is complete
-  }, []);
-
-  // Save to Local Storage safely
-  useEffect(() => {
-    if (!isInitialized) return; // Prevent saving/wiping during initial load!
-
-    if (activeModelUrl) {
-      localStorage.setItem("activeModelUrl", activeModelUrl);
-    } else {
-      localStorage.removeItem("activeModelUrl");
-    }
-  }, [activeModelUrl, isInitialized]);
-
   const [focusTarget, setFocusTarget] = useState<THREE.Vector3 | null>(null);
 
   const orbitRef = useRef<OrbitControlsImpl>(null);
-
   const setters = useRef<any>({});
+  const isResetting = useRef(false);
+
+  // Restore Local Storage ONCE
+  useEffect(() => {
+    const saved = localStorage.getItem("viewerSettings");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.activeModelUrl) setActiveModelUrl(parsed.activeModelUrl);
+        // We will apply the rest of the settings below after a short delay
+        // to ensure Leva has mounted.
+        setTimeout(() => {
+          if (parsed.transform && setters.current.setTransform)
+            setters.current.setTransform(parsed.transform);
+          if (parsed.camera && setters.current.setCamera)
+            setters.current.setCamera(parsed.camera);
+          if (parsed.dof && setters.current.setDof)
+            setters.current.setDof(parsed.dof);
+          if (parsed.lights && setters.current.setLights)
+            setters.current.setLights(parsed.lights);
+          if (parsed.env && setters.current.setEnv)
+            setters.current.setEnv(parsed.env);
+          if (parsed.renderConfig && setters.current.setRenderConfig)
+            setters.current.setRenderConfig(parsed.renderConfig);
+          if (parsed.material && setters.current.setMaterial)
+            setters.current.setMaterial(parsed.material);
+          if (parsed.helpers && setters.current.setHelpers)
+            setters.current.setHelpers(parsed.helpers);
+          setIsInitialized(true);
+        }, 100);
+      } catch (e) {
+        console.error("Failed to parse settings", e);
+        setIsInitialized(true);
+      }
+    } else {
+      setIsInitialized(true);
+    }
+  }, []);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -207,9 +228,59 @@ export default function ModelViewerSettings() {
     }
   };
 
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const confirmImport = window.confirm(
+      "The current config is not saved, and is it ok to import a new config?",
+    );
+
+    if (!confirmImport) {
+      if (e.target) e.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target?.result as string);
+        if (parsed.activeModelUrl !== undefined)
+          setActiveModelUrl(parsed.activeModelUrl);
+        if (parsed.transform && setters.current.setTransform)
+          setters.current.setTransform(parsed.transform);
+        if (parsed.camera && setters.current.setCamera)
+          setters.current.setCamera(parsed.camera);
+        if (parsed.dof && setters.current.setDof)
+          setters.current.setDof(parsed.dof);
+        if (parsed.lights && setters.current.setLights)
+          setters.current.setLights(parsed.lights);
+        if (parsed.env && setters.current.setEnv)
+          setters.current.setEnv(parsed.env);
+        if (parsed.renderConfig && setters.current.setRenderConfig)
+          setters.current.setRenderConfig(parsed.renderConfig);
+        if (parsed.material && setters.current.setMaterial)
+          setters.current.setMaterial(parsed.material);
+        if (parsed.helpers && setters.current.setHelpers)
+          setters.current.setHelpers(parsed.helpers);
+      } catch (error) {
+        console.error("Failed to parse imported settings", error);
+        alert(
+          "Failed to parse imported settings. Ensure the file is a valid JSON configuration.",
+        );
+      } finally {
+        if (e.target) e.target.value = "";
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const [, setGlobalInfo] = useControls(() => ({
     "Selected Model": { value: "None", editable: false },
     "Reset All": button(() => {
+      isResetting.current = true;
+      localStorage.removeItem("viewerSettings");
+      setActiveModelUrl(null);
       if (setters.current.setTransform) {
         setters.current.setTransform({
           position: D_TRANSFORM.position,
@@ -337,6 +408,10 @@ export default function ModelViewerSettings() {
           gizmoType: D_HELPERS.gizmo.type,
         });
       }
+      // Give Leva time to process the updates before re-enabling save
+      setTimeout(() => {
+        isResetting.current = false;
+      }, 500);
     }),
   }));
 
@@ -354,9 +429,6 @@ export default function ModelViewerSettings() {
   const [modelSettings, setModel] = useControls(
     "Model",
     () => ({
-      Upload: button(() => {
-        fileInputRef.current?.click();
-      }),
       modelOptions: {
         label: "Select",
         options: modelOptionsRecord,
@@ -371,6 +443,45 @@ export default function ModelViewerSettings() {
         },
         transient: false,
       },
+      Upload: button(() => {
+        fileInputRef.current?.click();
+      }),
+      Import: button(() => {
+        importInputRef.current?.click();
+      }),
+      Export: button(() => {
+        let modelName = "None";
+        if (currentStateRef.current.activeModelUrl) {
+          if (currentStateRef.current.activeModelUrl.startsWith("blob:")) {
+            modelName = "Uploaded_Local_Model";
+          } else {
+            modelName =
+              currentStateRef.current.activeModelUrl
+                .split("/")
+                .pop()
+                ?.split("?")[0] || "Unknown";
+          }
+        }
+
+        // Remove file extension
+        modelName = modelName.replace(/\.[^/.]+$/, "");
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const filename = `${modelName}_${timestamp}.json`;
+
+        const blob = new Blob(
+          [JSON.stringify(currentStateRef.current, null, 2)],
+          { type: "application/json" },
+        );
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        URL.revokeObjectURL(url);
+      }),
     }),
     { collapsed: true },
     [models, isInitialized],
@@ -1177,6 +1288,40 @@ export default function ModelViewerSettings() {
     });
   }, [activeModelUrl, setGlobalInfo]);
 
+  // Keep ref of all current states for autosave and export
+  const currentStateRef = useRef<any>({});
+  useEffect(() => {
+    currentStateRef.current = {
+      activeModelUrl,
+      transform,
+      camera,
+      dof,
+      lights,
+      env,
+      renderConfig,
+      material,
+      helpers,
+    };
+
+    if (!isInitialized || isResetting.current) return;
+
+    localStorage.setItem(
+      "viewerSettings",
+      JSON.stringify(currentStateRef.current),
+    );
+  }, [
+    activeModelUrl,
+    transform,
+    camera,
+    dof,
+    lights,
+    env,
+    renderConfig,
+    material,
+    helpers,
+    isInitialized,
+  ]);
+
   return (
     <div className="fixed inset-0 flex bg-zinc-950 overflow-hidden">
       <input
@@ -1185,6 +1330,13 @@ export default function ModelViewerSettings() {
         accept=".glb,.gltf"
         className="hidden"
         onChange={handleUpload}
+      />
+      <input
+        type="file"
+        ref={importInputRef}
+        accept=".json"
+        className="hidden"
+        onChange={handleImport}
       />
       <div className="flex-1 relative">
         <Leva titleBar={LEVA_TITLE_BAR} theme={LEVA_THEME} />

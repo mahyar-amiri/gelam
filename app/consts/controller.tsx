@@ -45,7 +45,7 @@ export const D_DOF: DOFConfig = {
 export const D_AMBIENT: AmbientLight = { intensity: 1, color: "#ffffff" };
 
 export const D_DIR1: DirectionalLight = {
-  enabled: true,
+  enabled: false,
   intensity: 0.5,
   color: "#ffffff",
   position: { x: 1, y: 1, z: 1 },
@@ -173,6 +173,7 @@ export const ENV_PRESETS = [
   "sunset",
   "warehouse",
 ];
+
 export const TONE_MAPS = [
   "None",
   "Linear",
