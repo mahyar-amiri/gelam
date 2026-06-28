@@ -1,3 +1,5 @@
+"use client";
+
 import ModelViewerSettings from "@/components/ModelViewerSettings";
 
 export default function Home() {

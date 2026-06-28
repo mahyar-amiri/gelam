@@ -89,6 +89,8 @@ useGLTF.preload(MODEL_NAME);
 export default function ModelViewer() {
   // Set configs
   D_CAMERA.orbitEnabled = false;
+  D_TRANSFORM.position.y = -0.3;
+  D_TRANSFORM.position.z = -1;
 
   return (
     <div className="w-screen h-screen overflow-hidden fixed inset-0 a-z-10 bg-zinc-950 bg-[url('/background-blur.jpg')] bg-cover bg-center">

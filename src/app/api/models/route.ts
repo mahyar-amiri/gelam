@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
     await mkdir(modelsDir, { recursive: true });
     const path = join(modelsDir, file.name);
-    
+
     // Save file to public/models
     await writeFile(path, buffer);
 
