@@ -1,131 +1,32 @@
-'use client';
+"use client";
 
-import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, ContactShadows } from '@react-three/drei';
-import * as THREE from 'three';
-import { Scroll, FileText, RotateCcw } from 'lucide-react';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { OrbitControls, ContactShadows } from "@react-three/drei";
+import { Scroll, FileText, RotateCcw } from "lucide-react";
+import * as THREE from "three";
 
 // ============================================================================
 // Paper Settings & Image Configurations
 // ============================================================================
-const PAPER_WIDTH = 2.1;          // A4 aspect width (210mm)
-const PAPER_HEIGHT = 2.97;        // A4 aspect height (297mm)
-const PAPER_THICKNESS = 0.01;     // Thickness in 3D units (clearly visible edge rims)
-const FRONT_IMAGE_URL = '/letter-front.jpg';   // Front face image
-const BACK_IMAGE_URL = '/letter-back.jpg';    // Back face image
+const PAPER_WIDTH = 2.1;
+const PAPER_HEIGHT = 3.1;
+const PAPER_THICKNESS = 0.01;
+const FRONT_IMAGE_URL = "/letter_front.jpg";
+const BACK_IMAGE_URL = "/letter_back.jpg";
 
 // Geometry subdivisions for smooth curving
 const SEGMENTS_X = 48;
 const SEGMENTS_Y = 140;
 
 // ============================================================================
-// SSR-Safe Texture Generators
+// SSR-Safe Texture Generator
 // ============================================================================
 function createPlaceholderTexture(): THREE.DataTexture {
     // 1x1 warm parchment pixel to prevent Next.js SSR crashes
     const data = new Uint8Array([245, 238, 222, 255]);
     const texture = new THREE.DataTexture(data, 1, 1, THREE.RGBAFormat);
     texture.needsUpdate = true;
-    return texture;
-}
-
-function createClientFallbackTexture(label: string): THREE.CanvasTexture | null {
-    if (typeof window === 'undefined') return null;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 1240;
-    canvas.height = 1754; // A4 ratio @ 150 DPI
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
-
-    // Parchment paper background
-    const bg = ctx.createRadialGradient(620, 877, 80, 620, 877, 950);
-    bg.addColorStop(0, '#fbf6ea');
-    bg.addColorStop(0.7, '#f3e5c8');
-    bg.addColorStop(1, '#ddca9c');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Subtle paper grain noise
-    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    for (let i = 0; i < imgData.data.length; i += 4) {
-        const grain = (Math.random() - 0.5) * 12;
-        imgData.data[i] = Math.min(255, Math.max(0, imgData.data[i] + grain));
-        imgData.data[i + 1] = Math.min(255, Math.max(0, imgData.data[i + 1] + grain));
-        imgData.data[i + 2] = Math.min(255, Math.max(0, imgData.data[i + 2] + grain));
-    }
-    ctx.putImageData(imgData, 0, 0);
-
-    // Ornate double border
-    ctx.strokeStyle = '#6e5134';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(60, 60, canvas.width - 120, canvas.height - 120);
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(74, 74, canvas.width - 148, canvas.height - 148);
-
-    // Title
-    ctx.fillStyle = '#26190e';
-    ctx.font = 'bold 42px "Georgia", serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('A4 CORRESPONDENCE', 620, 200);
-
-    ctx.font = 'italic 20px "Georgia", serif';
-    ctx.fillStyle = '#614833';
-    ctx.fillText(`Mapped Image: ${label}`, 620, 245);
-
-    ctx.strokeStyle = '#8a653d';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(360, 275);
-    ctx.lineTo(880, 275);
-    ctx.stroke();
-
-    // Letter content
-    ctx.textAlign = 'left';
-    ctx.font = '27px "Georgia", serif';
-    ctx.fillStyle = '#1e160e';
-
-    const lines = [
-        'Document Specification:',
-        '',
-        `• Paper Dimensions: ${PAPER_WIDTH} W × ${PAPER_HEIGHT} H`,
-        `• Physical Thickness: ${PAPER_THICKNESS} units (Solid volumetric mesh)`,
-        '• Front and reverse surfaces independently rendered',
-        '• Smooth Archimedean spiral curling with exact raycasting',
-        '',
-        'Click directly on this sheet to toggle rolling or unrolling.',
-    ];
-
-    let y = 380;
-    lines.forEach((line) => {
-        ctx.fillText(line, 130, y);
-        y += 50;
-    });
-
-    // Wax Seal
-    const sx = 920;
-    const sy = 1430;
-    const seal = ctx.createRadialGradient(sx - 12, sy - 12, 10, sx, sy, 80);
-    seal.addColorStop(0, '#c72424');
-    seal.addColorStop(0.7, '#851212');
-    seal.addColorStop(1, '#4d0808');
-    ctx.fillStyle = seal;
-    ctx.beginPath();
-    ctx.arc(sx, sy, 70, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = '#360505';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    ctx.fillStyle = '#fce5cd';
-    ctx.font = 'bold 44px serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('𐤈', sx, sy + 15);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
     return texture;
 }
 
@@ -169,7 +70,7 @@ const RollingPaper: React.FC<PaperMeshProps> = ({
     // Multi-material setup: 4 side rims, front face (+Z), and back face (-Z)
     const materials = useMemo(() => {
         const edgeMaterial = new THREE.MeshStandardMaterial({
-            color: '#eae0cb',
+            color: "#eae0cb",
             roughness: 0.9,
             metalness: 0.02,
         });
@@ -204,8 +105,8 @@ const RollingPaper: React.FC<PaperMeshProps> = ({
             const pos = posAttr.array as Float32Array;
             const count = posAttr.count;
 
-            const R0 = 0.17;             // Outer curl radius
-            const Rmin = 0.08;           // Core radius
+            const R0 = 0.17;   // Outer curl radius
+            const Rmin = 0.08; // Core radius
             const kPrime = (R0 - Rmin) / PAPER_HEIGHT;
             const L = progress * PAPER_HEIGHT;
             const yJunction = L - PAPER_HEIGHT * 0.5;
@@ -323,10 +224,10 @@ const RollingPaper: React.FC<PaperMeshProps> = ({
             }}
             onPointerOver={(e) => {
                 e.stopPropagation();
-                document.body.style.cursor = 'pointer';
+                document.body.style.cursor = "pointer";
             }}
             onPointerOut={() => {
-                document.body.style.cursor = 'auto';
+                document.body.style.cursor = "auto";
             }}
         />
     );
@@ -360,14 +261,7 @@ export default function Page() {
                     tex.wrapS = THREE.ClampToEdgeWrapping;
                     tex.wrapT = THREE.ClampToEdgeWrapping;
                     onDone(tex);
-                },
-                undefined,
-                () => {
-                    // If public image is not yet placed, fall back to generated parchment
-                    const fallback = createClientFallbackTexture(url);
-                    if (fallback) onDone(fallback);
-                }
-            );
+                });
         };
 
         loadTex(FRONT_IMAGE_URL, setFrontTexture);
@@ -382,20 +276,19 @@ export default function Page() {
     return (
         <div
             style={{
-                width: '100vw',
-                height: '100vh',
-                position: 'relative',
-                overflow: 'hidden',
-                backgroundColor: '#161412',
-                userSelect: 'none',
-                fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                width: "100vw",
+                height: "100vh",
+                position: "relative",
+                overflow: "hidden",
+                backgroundColor: "#161412",
+                userSelect: "none",
             }}
         >
             {/* 3D Canvas Viewport */}
             <Canvas
                 camera={{ position: [0, 0, 4.3], fov: 45 }}
                 shadows
-                style={{ width: '100%', height: '100%' }}
+                style={{ width: "100%", height: "100%" }}
             >
                 <ambientLight intensity={0.7} />
                 <directionalLight
@@ -437,46 +330,46 @@ export default function Page() {
             {/* Bottom Control Dock */}
             <div
                 style={{
-                    position: 'absolute',
-                    bottom: '2rem',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '90%',
-                    maxWidth: '400px',
+                    position: "absolute",
+                    bottom: "2rem",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: "90%",
+                    maxWidth: "400px",
                     zIndex: 10,
                 }}
             >
                 <div
                     style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.75rem',
-                        padding: '1rem',
-                        borderRadius: '1.25rem',
-                        background: 'rgba(28, 25, 23, 0.8)',
-                        backdropFilter: 'blur(16px)',
-                        border: '1px solid rgba(87, 83, 78, 0.5)',
-                        boxShadow: '0 20px 35px rgba(0, 0, 0, 0.6)',
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "0.75rem",
+                        padding: "1rem",
+                        borderRadius: "1.25rem",
+                        background: "rgba(28, 25, 23, 0.8)",
+                        backdropFilter: "blur(16px)",
+                        border: "1px solid rgba(87, 83, 78, 0.5)",
+                        boxShadow: "0 20px 35px rgba(0, 0, 0, 0.6)",
                     }}
                 >
-                    <div style={{ display: 'flex', gap: '0.6rem' }}>
+                    <div style={{ display: "flex", gap: "0.6rem" }}>
                         <button
                             onClick={handleToggle}
                             style={{
                                 flex: 1,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '0.5rem',
-                                padding: '0.75rem 1rem',
-                                borderRadius: '0.85rem',
-                                background: 'linear-gradient(135deg, #d97706, #b45309)',
-                                color: '#1c1917',
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "0.5rem",
+                                padding: "0.75rem 1rem",
+                                borderRadius: "0.85rem",
+                                background: "linear-gradient(135deg, #d97706, #b45309)",
+                                color: "#1c1917",
                                 fontWeight: 600,
-                                fontSize: '0.875rem',
-                                border: 'none',
-                                cursor: 'pointer',
-                                boxShadow: '0 4px 14px rgba(180, 83, 9, 0.35)',
+                                fontSize: "0.875rem",
+                                border: "none",
+                                cursor: "pointer",
+                                boxShadow: "0 4px 14px rgba(180, 83, 9, 0.35)",
                             }}
                         >
                             {rolled ? (
@@ -500,12 +393,12 @@ export default function Page() {
                             }}
                             title="Reset Flat"
                             style={{
-                                padding: '0.75rem',
-                                borderRadius: '0.85rem',
-                                background: 'rgba(41, 37, 36, 0.8)',
-                                border: '1px solid rgba(87, 83, 78, 0.5)',
-                                color: '#d6d3d1',
-                                cursor: 'pointer',
+                                padding: "0.75rem",
+                                borderRadius: "0.85rem",
+                                background: "rgba(41, 37, 36, 0.8)",
+                                border: "1px solid rgba(87, 83, 78, 0.5)",
+                                color: "#d6d3d1",
+                                cursor: "pointer",
                             }}
                         >
                             <RotateCcw size={18} />
@@ -515,26 +408,26 @@ export default function Page() {
                     {/* Progress Slider */}
                     <div
                         style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.75rem',
-                            paddingTop: '0.5rem',
-                            borderTop: '1px solid rgba(68, 64, 60, 0.5)',
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.75rem",
+                            paddingTop: "0.5rem",
+                            borderTop: "1px solid rgba(68, 64, 60, 0.5)",
                         }}
                     >
                         <span
                             style={{
-                                fontSize: '0.75rem',
-                                fontFamily: 'monospace',
-                                color: '#a8a29e',
-                                width: '3rem',
+                                fontSize: "0.75rem",
+                                fontFamily: "monospace",
+                                color: "#a8a29e",
+                                width: "3rem",
                             }}
                         >
                             {useManual
                                 ? `${Math.round(manualProgress * 100)}%`
                                 : rolled
-                                    ? '100%'
-                                    : '0%'}
+                                    ? "100%"
+                                    : "0%"}
                         </span>
                         <input
                             type="range"
@@ -548,7 +441,7 @@ export default function Page() {
                                 setManualProgress(val);
                                 setRolled(val > 0.5);
                             }}
-                            style={{ flex: 1, cursor: 'pointer', accentColor: '#f59e0b' }}
+                            style={{ flex: 1, cursor: "pointer", accentColor: "#f59e0b" }}
                         />
                     </div>
                 </div>
