@@ -475,8 +475,8 @@ function getPlaqueContourPoints(w: number, l: number, samplesPerSegment = 10): P
   // 3. Corner Ear Arc (rounded outward corner tab)
   const earCenterX = 0.63 * w;
   const earCenterY = 0.63 * l;
-  const earRadiusX = 0.16 * w;
-  const earRadiusY = 0.16 * l;
+  const earRadiusX = 0.15 * w;
+  const earRadiusY = 0.15 * l;
   const earSamples = 16;
   for (let i = 0; i <= earSamples; i++) {
     const theta = Math.PI / 2 - (i / earSamples) * (Math.PI / 2);
@@ -494,7 +494,7 @@ function getPlaqueContourPoints(w: number, l: number, samplesPerSegment = 10): P
   for (let i = 1; i <= samplesPerSegment; i++) {
     const t = i / samplesPerSegment;
     const v = 0.55 * (1 - t);
-    const u = 1 - 0.02 * Math.pow(1 - t, 2);
+    const u = 1 - 0.08 * Math.pow(1 - t, 4);
     q1.push({ x: u * w, y: v * l });
   }
 
