@@ -154,9 +154,14 @@ export function Identifier({ ...props }) {
     </group>
   );
 }
+
 export function Box({ open, ...props }: { open: boolean }) {
   const { nodes, materials } = useGLTF("/wooden_box.glb");
+  const [isHovered, setIsHovered] = useState(false);
+
   const lidRef = useRef<THREE.Group>(null);
+  const lockRightRef = useRef<THREE.Group>(null);
+  const lockLeftRef = useRef<THREE.Group>(null);
 
   useFrame(() => {
     if (lidRef.current) {
@@ -168,14 +173,42 @@ export function Box({ open, ...props }: { open: boolean }) {
         0.01,
       );
     }
+
+    const targetLock = open || isHovered ? -Math.PI / 1.5 : 0;
+    if (lockRightRef.current) {
+      // Lock animation
+      lockRightRef.current.rotation.x = THREE.MathUtils.lerp(
+        lockRightRef.current.rotation.x,
+        targetLock,
+        0.1,
+      );
+    }
+
+    if (lockLeftRef.current) {
+      // Lock animation
+      lockLeftRef.current.rotation.x = THREE.MathUtils.lerp(
+        lockLeftRef.current.rotation.x,
+        targetLock,
+        0.1,
+      );
+    }
   });
 
   return (
     <group {...props} dispose={null}>
-      <group>
+      <group
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setIsHovered(true);
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation();
+          setIsHovered(false);
+        }}
+      >
         {/* LID */}
         <group ref={lidRef} position={[0, 1.75, -1.42]}>
-          <Identifier visible={false} />
+          {/* <Identifier /> */}
           <group name="BoxLid" position={[0, -1.75, 1.42]}>
             <mesh
               name="AboveSurface"
@@ -198,32 +231,38 @@ export function Box({ open, ...props }: { open: boolean }) {
               geometry={nodes.polySurface30_PDC_tex_0.geometry}
               material={materials.PDC_tex}
             />
-            {/* Right Lock */}
-            <group name="RightLock">
-              <mesh
-                castShadow
-                receiveShadow
-                geometry={nodes.polySurface26_PDC_tex_0.geometry}
-                material={materials.PDC_tex}
-              />
-              <mesh
-                castShadow
-                receiveShadow
-                geometry={nodes.polySurface24_PDC_tex_0.geometry}
-                material={materials.PDC_tex}
-              />
-              <mesh
-                castShadow
-                receiveShadow
-                geometry={nodes.pPlane1_PDC_tex_0.geometry}
-                material={materials.PDC_tex}
-              />
-              <mesh
-                castShadow
-                receiveShadow
-                geometry={nodes.polySurface22_PDC_tex_0.geometry}
-                material={materials.PDC_tex}
-              />
+
+            {/* Right Lock Handle*/}
+            <group name="RightLockHandle">
+              <group name="RightLockHandle">
+                <mesh
+                  castShadow
+                  receiveShadow
+                  geometry={nodes.polySurface26_PDC_tex_0.geometry}
+                  material={materials.PDC_tex}
+                />
+                <group ref={lockRightRef} position={[0.9, 1.8, 2.1]}>
+                  <mesh
+                    position={[-0.9, -1.8, -2.1]}
+                    castShadow
+                    receiveShadow
+                    geometry={nodes.polySurface24_PDC_tex_0.geometry}
+                    material={materials.PDC_tex}
+                  />
+                </group>
+                <mesh
+                  castShadow
+                  receiveShadow
+                  geometry={nodes.pPlane1_PDC_tex_0.geometry}
+                  material={materials.PDC_tex}
+                />
+                <mesh
+                  castShadow
+                  receiveShadow
+                  geometry={nodes.polySurface22_PDC_tex_0.geometry}
+                  material={materials.PDC_tex}
+                />
+              </group>
             </group>
             {/* Left Lock Handle */}
             <group name="LeftLockHandle">
@@ -245,22 +284,25 @@ export function Box({ open, ...props }: { open: boolean }) {
                 geometry={nodes.polySurface31_PDC_tex_0.geometry}
                 material={materials.PDC_tex}
               />
-              <mesh
-                castShadow
-                receiveShadow
-                geometry={nodes.polySurface28_PDC_tex_0.geometry}
-                material={materials.PDC_tex}
-              />
+              <group ref={lockLeftRef} position={[0.9, 1.8, 2.1]}>
+                <mesh
+                  position={[-0.9, -1.8, -2.1]}
+                  castShadow
+                  receiveShadow
+                  geometry={nodes.polySurface28_PDC_tex_0.geometry}
+                  material={materials.PDC_tex}
+                />
+              </group>
             </group>
           </group>
         </group>
 
-        <group position={[0, 2, 0]}>
-          <mesh scale={0.1} visible={false}>
+        <group position={[0, 2, 0]} visible={false}>
+          <mesh scale={0.1} visible={true}>
             <sphereGeometry args={[0.3, 16, 16]} />
             <meshStandardMaterial color="red" />
           </mesh>
-          {/* <directionalLight name="DirectionalLight" intensity={10} /> */}
+          <directionalLight name="DirectionalLight" intensity={10} />
         </group>
 
         <mesh
@@ -284,13 +326,13 @@ export function Box({ open, ...props }: { open: boolean }) {
           geometry={nodes.polySurface8_PDC_tex_0.geometry}
           material={materials.PDC_tex}
         />
-        {/* <mesh
+        <mesh
           name="SideSurface"
           castShadow
           receiveShadow
           geometry={nodes.polySurface4_PDC_tex_0.geometry}
           material={materials.PDC_tex}
-        /> */}
+        />
 
         <group name="Right">
           {/* RightWood */}
