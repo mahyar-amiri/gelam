@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, Suspense } from "react";
+import React, { useState, useRef, useEffect, Suspense, Component, type ReactNode } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
     Text,
@@ -10,6 +10,7 @@ import {
     ScrollControls,
     Html,
     useScroll,
+    useProgress,
 } from "@react-three/drei";
 import * as THREE from "three";
 import {
@@ -20,9 +21,136 @@ import {
     Sparkles,
     Layers,
     Cpu,
+    RefreshCw,
+    AlertCircle,
 } from "lucide-react";
 
 type Phase = "inspect" | "locked" | "unlocked" | "scrolled";
+
+// --- Scene Error Boundary ---
+interface ErrorBoundaryProps {
+    children: ReactNode;
+    resetKey: number;
+    onError: (error: Error) => void;
+}
+
+interface ErrorBoundaryState {
+    hasError: boolean;
+}
+
+class SceneErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+    constructor(props: ErrorBoundaryProps) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError(): ErrorBoundaryState {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error: Error) {
+        this.props.onError(error);
+    }
+
+    componentDidUpdate(prevProps: ErrorBoundaryProps) {
+        if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
+            this.setState({ hasError: false });
+        }
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return null; // Suppress canvas crash; outer CenterLoader displays the error state
+        }
+        return this.props.children;
+    }
+}
+
+// --- Center Loading Screen Component with Retry Support ---
+interface CenterLoaderProps {
+    errorMessage: string | null;
+    onRetry: () => void;
+}
+
+function CenterLoader({ errorMessage, onRetry }: CenterLoaderProps) {
+    const { active, progress, errors } = useProgress();
+    const [visible, setVisible] = useState(true);
+
+    const hasFailed = Boolean(errorMessage || errors.length > 0);
+
+    useEffect(() => {
+        if (!hasFailed && !active && progress === 100) {
+            const timer = setTimeout(() => setVisible(false), 600);
+            return () => clearTimeout(timer);
+        } else if (active || hasFailed) {
+            setVisible(true);
+        }
+    }, [active, progress, hasFailed]);
+
+    if (!visible) return null;
+
+    const isDone = !hasFailed && !active && progress === 100;
+
+    return (
+        <div
+            className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-black transition-opacity duration-500
+                ${isDone ? "opacity-0 pointer-events-none" : "opacity-100"}
+            `}
+        >
+            <div className="flex flex-col items-center gap-5 max-w-sm px-6 text-center">
+                {hasFailed ? (
+                    <>
+                        {/* Error Warning Badge */}
+                        <div className="size-16 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 mb-1 shadow-[0_0_25px_rgba(239,68,68,0.2)]">
+                            <AlertCircle className="size-8" />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <h3 className="text-xl font-bold text-white tracking-tight">
+                                Failed to Load 3D Assets
+                            </h3>
+                            <p className="text-xs text-slate-400 leading-relaxed">
+                                {errorMessage || "An asset failed to download. Please check your network connection and try again."}
+                            </p>
+                        </div>
+
+                        {/* Retry Action */}
+                        <button
+                            onClick={onRetry}
+                            className="mt-2 inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-medium text-sm transition-all duration-150 shadow-[0_0_20px_rgba(37,99,235,0.4)] cursor-pointer"
+                        >
+                            <RefreshCw className="size-4" />
+                            <span>Try Again</span>
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        {/* Large Center Percentage */}
+                        <div className="flex items-baseline font-mono font-bold tracking-tight text-white">
+                            <span className="text-6xl md:text-7xl">
+                                {Math.floor(progress)}
+                            </span>
+                            <span className="text-2xl md:text-3xl text-blue-500 ml-1.5">%</span>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="w-56 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+                            <div
+                                className="h-full bg-blue-500 rounded-full transition-all duration-200 ease-out shadow-[0_0_14px_rgba(59,130,246,0.9)]"
+                                style={{ width: `${progress}%` }}
+                            />
+                        </div>
+
+                        {/* Subtitle Status */}
+                        <span className="text-xs uppercase tracking-[0.25em] text-slate-400 font-medium animate-pulse">
+                            {isDone ? "Ready" : "Loading Assets & Scene"}
+                        </span>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
 
 interface InteractiveCubeProps {
     inspectBadgeRef: React.RefObject<HTMLDivElement | null>;
@@ -353,31 +481,55 @@ export const InteractiveCube: React.FC<InteractiveCubeProps> = ({
 };
 
 export default function Page() {
+    const [retryKey, setRetryKey] = useState(0);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
     const inspectBadgeRef = useRef<HTMLDivElement>(null);
     const lockedBadgeRef = useRef<HTMLDivElement>(null);
     const unlockedBadgeRef = useRef<HTMLDivElement>(null);
 
+    const handleRetry = () => {
+        // 1. Wipe cached Three.js assets so files are requested freshly
+        THREE.Cache.clear();
+        // 2. Clear error state
+        setErrorMessage(null);
+        // 3. Increment key to completely remount the Canvas and Suspense tree
+        setRetryKey((prev) => prev + 1);
+    };
+
     return (
         <div className="relative w-screen h-screen bg-[#070709] text-white font-['Space_Grotesk',sans-serif] overflow-hidden">
-            {/* 3D Canvas Layer */}
-            <Canvas camera={{ position: [0, 0, 3], fov: 50 }} className="size-full">
-                <color attach="background" args={["#070709"]} />
-                <ambientLight intensity={1.5} />
-                <directionalLight position={[10, 10, 5]} intensity={1.5} color="#ffffff" />
-                <pointLight position={[-5, -5, -5]} intensity={0.8} color="#3b82f6" />
-                <pointLight position={[0, 4, 3]} intensity={1.2} color="#60a5fa" />
-                <Environment preset="city" />
+            {/* Center Loading & Error Screen */}
+            <CenterLoader errorMessage={errorMessage} onRetry={handleRetry} />
 
-                <ScrollControls pages={5} damping={0.2}>
-                    <Suspense fallback={null}>
-                        <InteractiveCube
-                            inspectBadgeRef={inspectBadgeRef}
-                            lockedBadgeRef={lockedBadgeRef}
-                            unlockedBadgeRef={unlockedBadgeRef}
-                        />
-                    </Suspense>
-                </ScrollControls>
-            </Canvas>
+            {/* 3D Canvas Layer wrapped in Error Boundary */}
+            <SceneErrorBoundary
+                resetKey={retryKey}
+                onError={(error) => setErrorMessage(error.message || "Failed to load 3D assets")}
+            >
+                <Canvas
+                    key={retryKey}
+                    camera={{ position: [0, 0, 3], fov: 50 }}
+                    className="size-full"
+                >
+                    <color attach="background" args={["#070709"]} />
+                    <ambientLight intensity={1.5} />
+                    <directionalLight position={[10, 10, 5]} intensity={1.5} color="#ffffff" />
+                    <pointLight position={[-5, -5, -5]} intensity={0.8} color="#3b82f6" />
+                    <pointLight position={[0, 4, 3]} intensity={1.2} color="#60a5fa" />
+                    <Environment preset="city" />
+
+                    <ScrollControls pages={5} damping={0.2}>
+                        <Suspense fallback={null}>
+                            <InteractiveCube
+                                inspectBadgeRef={inspectBadgeRef}
+                                lockedBadgeRef={lockedBadgeRef}
+                                unlockedBadgeRef={unlockedBadgeRef}
+                            />
+                        </Suspense>
+                    </ScrollControls>
+                </Canvas>
+            </SceneErrorBoundary>
 
             {/* Instruction Badges */}
             <div className="fixed bottom-9 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-2">
