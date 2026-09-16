@@ -652,7 +652,8 @@ export const InteractiveBox: React.FC<InteractiveBoxProps> = ({
               document.body.style.cursor = "pointer";
             }
           }}
-          onPointerOut={() => {
+          onPointerOut={(e) => {
+            e.stopPropagation();
             hoveredRef.current = false;
             document.body.style.cursor = "auto";
           }}
