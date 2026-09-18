@@ -18,6 +18,7 @@ import {
   Html,
   useScroll,
   useProgress,
+  useCursor,
 } from "@react-three/drei";
 import * as THREE from "three";
 import {
@@ -34,7 +35,7 @@ import {
 
 type Phase = "inspect" | "locked" | "unlocked" | "scrolled";
 
-const SCROLL_UNLOCK_DISTANCE = 400; // 400px scroll window for box lid opening/closing
+const SCROLL_UNLOCK_DISTANCE = 400;
 
 // --- Scene Error Boundary ---
 interface ErrorBoundaryProps {
@@ -75,7 +76,7 @@ class SceneErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
   }
 }
 
-// --- Center Loading Screen Component with Retry Support ---
+// --- Center Loading Screen Component ---
 interface CenterLoaderProps {
   errorMessage: string | null;
   onRetry: () => void;
@@ -161,7 +162,8 @@ export function Box({
   isUnlocked = false,
   open = false,
   onClick,
-  canInteract,
+  canClick = false,
+  onHoverChange,
   lidText,
   ...props
 }: {
@@ -170,18 +172,21 @@ export function Box({
   isUnlocked?: boolean;
   open?: boolean;
   onClick?: (e: any) => void;
-  canInteract?: () => boolean;
+  canClick?: boolean;
+  onHoverChange?: (hovered: boolean) => void;
   lidText?: string;
   [key: string]: any;
 }) {
   const { nodes, materials } = useGLTF("/wooden_box.glb") as any;
   const [isHovered, setIsHovered] = useState(false);
 
+  // Directly controls cursor pointer when model is hovered and clickable
+  useCursor(isHovered && canClick);
+
   const lidRef = useRef<THREE.Group>(null);
   const lockRightRef = useRef<THREE.Group>(null);
   const lockLeftRef = useRef<THREE.Group>(null);
 
-  // Dedicated transparent material to independently drive box opacity
   const boxMaterial = useMemo(() => {
     if (!materials || !materials.PDC_tex) return null;
     const mat = materials.PDC_tex.clone();
@@ -198,12 +203,6 @@ export function Box({
   }, [boxMaterial]);
 
   useFrame((_, delta) => {
-    const interactive = canInteract ? canInteract() : true;
-    if (!interactive && isHovered) {
-      setIsHovered(false);
-    }
-
-    // Update box body opacity from ref
     if (boxMaterial) {
       const currentOpacity = opacityRef ? (opacityRef.current ?? 1) : 1;
       boxMaterial.opacity = currentOpacity;
@@ -221,7 +220,7 @@ export function Box({
       );
     }
 
-    const targetLock = progress > 0.02 || (isHovered && interactive) ? -Math.PI / 2 : 0;
+    const targetLock = progress > 0.02 || (isHovered && canClick) ? -Math.PI / 2 : 0;
     if (lockRightRef.current) {
       lockRightRef.current.rotation.x = THREE.MathUtils.damp(
         lockRightRef.current.rotation.x,
@@ -246,21 +245,25 @@ export function Box({
   return (
     <group {...props} dispose={null}>
       <group
-        onClick={onClick}
+        onClick={(e) => {
+          if (canClick && onClick) {
+            onClick(e);
+          }
+        }}
         onPointerOver={(e) => {
           e.stopPropagation();
-          if (canInteract && !canInteract()) return;
           setIsHovered(true);
+          onHoverChange?.(true);
         }}
         onPointerOut={(e) => {
           e.stopPropagation();
           setIsHovered(false);
+          onHoverChange?.(false);
         }}
       >
         {/* LID */}
         <group ref={lidRef} position={[0, 1.75, -1.42]}>
           <group name="BoxLid" position={[0, -1.75, 1.42]}>
-            {/* Top Text on Box Lid using custom font */}
             <Text
               font="/hpf.ttf"
               position={[0, 1.95, 0]}
@@ -275,7 +278,8 @@ export function Box({
               color="#ffffff"
               renderOrder={10}
             >
-              {lidText ?? (isUnlocked ? "UNLOCKED\nEXPLORE" : "HPF // ARCHIVE")}
+              {/* {lidText ?? (isUnlocked ? "UNLOCKED\nEXPLORE" : "HPF // ARCHIVE")} */}
+              {"Harry Potter\nMagic Elder Wand"}
             </Text>
 
             <mesh
@@ -502,6 +506,9 @@ export const InteractiveBox: React.FC<InteractiveBoxProps> = ({
   const boxContainerRef = useRef<THREE.Group>(null);
 
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [canClick, setCanClick] = useState(false);
+
+  const canClickRef = useRef(false);
   const isUnlockedRef = useRef(false);
   const openProgressRef = useRef(0);
   const opacityRef = useRef(0);
@@ -515,17 +522,13 @@ export const InteractiveBox: React.FC<InteractiveBoxProps> = ({
   useEffect(() => {
     camera.position.set(0, 0, 5);
     camera.lookAt(0, 0, 0);
-
-    return () => {
-      document.body.style.cursor = "auto";
-    };
   }, [camera]);
 
   useFrame((_, delta) => {
     const lockScrollPx = scrollData.el.clientHeight;
     let currentScroll = scrollData.el.scrollTop;
 
-    // Hard scroll stop at 1st screen until unlocked
+    // Hard scroll stop at screen 1 until unlocked
     if (!isUnlockedRef.current && currentScroll >= lockScrollPx) {
       scrollData.el.scrollTop = lockScrollPx;
       currentScroll = lockScrollPx;
@@ -534,11 +537,8 @@ export const InteractiveBox: React.FC<InteractiveBoxProps> = ({
     const scrollProgress = THREE.MathUtils.clamp(currentScroll / lockScrollPx, 0, 1);
     const extraScroll = Math.max(0, currentScroll - lockScrollPx);
 
-    // Box appears via opacity during initial scroll
-    const targetBoxOpacity = THREE.MathUtils.clamp(scrollProgress / 0.25, 0, 1);
-    opacityRef.current = targetBoxOpacity;
+    opacityRef.current = THREE.MathUtils.clamp(scrollProgress / 0.25, 0, 1);
 
-    // Lid opening progress window
     const openProgress = isUnlockedRef.current
       ? THREE.MathUtils.clamp(extraScroll / SCROLL_UNLOCK_DISTANCE, 0, 1)
       : 0;
@@ -571,14 +571,14 @@ export const InteractiveBox: React.FC<InteractiveBoxProps> = ({
       }
     }
 
-    const isClickable = phaseRef.current === "locked" && !isUnlockedRef.current;
-    if (!isClickable && hoveredRef.current) {
-      hoveredRef.current = false;
-      document.body.style.cursor = "auto";
+    // Sync reactive canClick state
+    const isClickable = currentPhase === "locked" && !isUnlockedRef.current;
+    if (canClickRef.current !== isClickable) {
+      canClickRef.current = isClickable;
+      setCanClick(isClickable);
     }
 
-    // Scroll animation:
-    // Starts at Math.PI / 2 facing the lid directly to camera, then rotates on X to reveal the 3D box
+    // Scroll animation
     if (groupRef.current) {
       const targetRotX = THREE.MathUtils.lerp(Math.PI / 2, 0.38, scrollProgress);
       const targetRotY = THREE.MathUtils.lerp(0, 0.65, scrollProgress);
@@ -586,7 +586,6 @@ export const InteractiveBox: React.FC<InteractiveBoxProps> = ({
       groupRef.current.rotation.x = THREE.MathUtils.damp(groupRef.current.rotation.x, targetRotX, 6, delta);
       groupRef.current.rotation.y = THREE.MathUtils.damp(groupRef.current.rotation.y, targetRotY, 6, delta);
 
-      // Moves further back (Z: 1.2 -> -1.0) as the user scrolls
       const targetPosZ = THREE.MathUtils.lerp(1.2, -1.0, scrollProgress);
       const targetPosY = THREE.MathUtils.lerp(0.2, -extraScroll * 0.003, 0.1);
 
@@ -603,18 +602,20 @@ export const InteractiveBox: React.FC<InteractiveBoxProps> = ({
         boxContainerRef.current.scale.setScalar(punchScale);
       } else {
         const isHovered = hoveredRef.current && isClickable;
-        const hoverScale = (isHovered ? 1.05 : 1.0) * baseScale;
+        const hoverScale = (isHovered ? 1.01 : 1.0) * baseScale;
         boxContainerRef.current.scale.lerp(new THREE.Vector3(hoverScale, hoverScale, hoverScale), 0.1);
       }
     }
   });
 
   const handleClick = () => {
-    if (phaseRef.current === "locked" && !isUnlockedRef.current) {
+    if (canClickRef.current) {
       clickPunchRef.current = 1;
       isUnlockedRef.current = true;
       setIsUnlocked(true);
-      document.body.style.cursor = "auto";
+      canClickRef.current = false;
+      setCanClick(false);
+      hoveredRef.current = false;
 
       const startScroll = scrollData.el.scrollTop;
       const targetScroll = startScroll + SCROLL_UNLOCK_DISTANCE;
@@ -641,30 +642,17 @@ export const InteractiveBox: React.FC<InteractiveBoxProps> = ({
   return (
     <>
       <group ref={groupRef}>
-        <group
-          ref={boxContainerRef}
-          scale={0.65}
-          position={[0, -0.2, 0]}
-          onPointerOver={(e) => {
-            e.stopPropagation();
-            if (phaseRef.current === "locked" && !isUnlockedRef.current) {
-              hoveredRef.current = true;
-              document.body.style.cursor = "pointer";
-            }
-          }}
-          onPointerOut={(e) => {
-            e.stopPropagation();
-            hoveredRef.current = false;
-            document.body.style.cursor = "auto";
-          }}
-        >
+        <group ref={boxContainerRef} scale={0.65} position={[0, -0.2, 0]}>
           <Box
             openProgressRef={openProgressRef}
             opacityRef={opacityRef}
             isUnlocked={isUnlocked}
+            canClick={canClick}
             lidText={lidText}
             onClick={handleClick}
-            canInteract={() => phaseRef.current === "locked" && !isUnlockedRef.current}
+            onHoverChange={(hovered) => {
+              hoveredRef.current = hovered;
+            }}
           />
         </group>
       </group>
@@ -676,10 +664,10 @@ export const InteractiveBox: React.FC<InteractiveBoxProps> = ({
         wrapperClass="!w-full !left-0 !top-0"
         style={{ pointerEvents: "none", width: "100%" }}
       >
-        <div className="h-screen w-full bg-red-500/5" />
+        <div className="h-screen w-full xbg-red-500/5" />
 
-        <div className="w-full pointer-events-auto bg-green-500/5">
-          <div className="h-screen w-full bg-yellow-500/5" />
+        <div className="w-full pointer-events-auto xbg-green-500/5">
+          <div className="h-screen w-full xbg-yellow-500/5" />
           <main
             className={`relative z-10 max-w-5xl mx-auto px-6 py-20 flex flex-col gap-28 transition-opacity duration-700
               ${isUnlocked ? "opacity-100" : "opacity-0 pointer-events-none"}
