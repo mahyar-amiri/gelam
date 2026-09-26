@@ -1,4 +1,3 @@
-// TODO: Add dict of models
 // TODO: Use model's scale based-on the width of the window to make it responsive
 
 "use client";
@@ -34,6 +33,18 @@ import {
   RefreshCw,
   AlertCircle,
 } from "lucide-react";
+
+
+export const MODEL_PATHS = {
+  gelamBox: "/gelam-box-t.glb",
+  // Add additional models here
+} as const;
+
+export type ModelKey = keyof typeof MODEL_PATHS;
+
+Object.values(MODEL_PATHS).forEach((path) => {
+  useGLTF.preload(path);
+});
 
 type Phase = "inspect" | "locked" | "unlocked" | "scrolled";
 
@@ -167,6 +178,7 @@ function CenterLoader({ errorMessage, onRetry }: CenterLoaderProps) {
 
 // --- Interactive Gelam Box Component ---
 export function Box({
+  modelPath = MODEL_PATHS.gelamBox,
   openProgressRef,
   opacityRef,
   isUnlocked = false,
@@ -177,6 +189,7 @@ export function Box({
   lidText,
   ...props
 }: {
+  modelPath?: string;
   openProgressRef?: React.RefObject<number | null>;
   opacityRef?: React.RefObject<number | null>;
   isUnlocked?: boolean;
@@ -187,7 +200,7 @@ export function Box({
   lidText?: string;
   [key: string]: any;
 }) {
-  const { nodes, materials } = useGLTF("/gelam-box-t.glb") as any;
+  const { nodes, materials } = useGLTF(modelPath) as any;
   const [isHovered, setIsHovered] = useState(false);
 
   // Directly controls cursor pointer when model is hovered and clickable
@@ -1177,8 +1190,6 @@ export function Box({
   );
 }
 
-useGLTF.preload("/gelam-box-t.glb");
-
 interface InteractiveBoxProps {
   inspectBadgeRef: React.RefObject<HTMLDivElement | null>;
   lockedBadgeRef: React.RefObject<HTMLDivElement | null>;
@@ -1390,8 +1401,8 @@ export const InteractiveBox: React.FC<InteractiveBoxProps> = ({
       <group ref={groupRef}>
         <group
           ref={boxContainerRef}
-          // position={[0, 0, 2.7]}
-          // rotation={[Math.PI / 2, 0, 0]}
+        // position={[0, 0, 2.7]}
+        // rotation={[Math.PI / 2, 0, 0]}
         >
           <Box
             openProgressRef={openProgressRef}
